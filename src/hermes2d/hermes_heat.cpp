@@ -33,7 +33,7 @@ struct HeatEdge
 
 struct HeatLabel
 {
-    double thermal_conductivity;
+    DataTable thermal_conductivity;
     TimeFunction volume_heat;
     double density;
     double specific_heat;
@@ -50,10 +50,18 @@ Scalar heat_matrix_form_surf(int n, double *wt, Func<Real> *u_ext[], Func<Real> 
     if (heatEdge[e->edge_marker].type == PhysicFieldBC_Heat_Flux)
         h = heatEdge[e->edge_marker].h;
 
+    Scalar result = 0;
     if (isPlanar)
-        return h * int_u_v<Real, Scalar>(n, wt, u, v);
+    {
+        for (int i = 0; i < n; i++)
+            result += wt[i] * h * (u->val[i] * v->val[i]);
+    }
     else
-        return h * 2 * M_PI * int_x_u_v<Real, Scalar>(n, wt, u, v, e);
+    {
+        for (int i = 0; i < n; i++)
+        result += h * 2 * M_PI * wt[i] * e->x[i] * (u->val[i] * v->val[i]);
+    }
+    return result;
 }
 
 template<typename Real, typename Scalar>
@@ -73,21 +81,44 @@ Scalar heat_vector_form_surf(int n, double *wt, Func<Real> *u_ext[], Func<Real> 
         Text = heatEdge[e->edge_marker].externalTemperature;
     }
 
+    Scalar result = 0;
     if (isPlanar)
-        return (q + Text * h) * int_v<Real, Scalar>(n, wt, v);
+    {
+        for (int i = 0; i < n; i++)
+            result += (q + Text * h) * wt[i] * (v->val[i]);
+    }
     else
-        return (q + Text * h) * 2 * M_PI * int_x_v<Real, Scalar>(n, wt, v, e);
+    {
+        for (int i = 0; i < n; i++)
+        result += h * (q + Text * h) * 2 * M_PI * wt[i] * e->x[i] * (v->val[i]);
+    }
+    return result;
 }
 
 template<typename Real, typename Scalar>
 Scalar heat_matrix_form(int n, double *wt, Func<Real> *u_ext[], Func<Real> *u, Func<Real> *v, Geom<Real> *e, ExtData<Scalar> *ext)
 {
+    Scalar result = 0.0;
     if (isPlanar)
-        return heatLabel[e->elem_marker].thermal_conductivity * int_grad_u_grad_v<Real, Scalar>(n, wt, u, v)
-                + ((analysisType == AnalysisType_Transient) ? heatLabel[e->elem_marker].density * heatLabel[e->elem_marker].specific_heat * int_u_v<Real, Scalar>(n, wt, u, v) / timeStep : 0.0);
+        for (int i = 0; i < n; i++)
+        {
+            result += ((e->elem_marker == -9119) ? 1.0 : heatLabel[e->elem_marker].thermal_conductivity.value((isLinear) ? 0.0 : ext->fn[0]->val[i]))
+                    * wt[i] * (u->dx[i] * v->dx[i] + u->dy[i] * v->dy[i]);
+
+            if (analysisType == AnalysisType_Transient)
+                result += heatLabel[e->elem_marker].density * heatLabel[e->elem_marker].specific_heat * wt[i] * (u->val[i] * v->val[i]) / timeStep;
+        }
     else
-        return heatLabel[e->elem_marker].thermal_conductivity * 2 * M_PI * int_x_grad_u_grad_v<Real, Scalar>(n, wt, u, v, e)
-                + ((analysisType == AnalysisType_Transient) ? heatLabel[e->elem_marker].density * heatLabel[e->elem_marker].specific_heat * 2 * M_PI * int_x_u_v<Real, Scalar>(n, wt, u, v, e) / timeStep : 0.0);
+        for (int i = 0; i < n; i++)
+        {
+            result += ((e->elem_marker == -9119) ? 1.0 : heatLabel[e->elem_marker].thermal_conductivity.value((isLinear) ? 0.0 : ext->fn[0]->val[i]))
+                    * 2 * M_PI * wt[i] * e->x[i] * (u->dx[i] * v->dx[i] + u->dy[i] * v->dy[i]);
+
+            if (analysisType == AnalysisType_Transient)
+                result += heatLabel[e->elem_marker].density * heatLabel[e->elem_marker].specific_heat * 2 * M_PI * wt[i] * e->x[i] * (u->val[i] * v->val[i]) / timeStep;
+        }
+
+    return result;
 }
 
 template<typename Real, typename Scalar>
@@ -103,11 +134,16 @@ Scalar heat_vector_form(int n, double *wt, Func<Real> *u_ext[], Func<Real> *v, G
 
 void callbackHeatWeakForm(WeakForm *wf, Hermes::vector<Solution *> slnArray)
 {
-    wf->add_matrix_form(0, 0, callback(heat_matrix_form));
+    if (Util::scene()->problemInfo()->linearityType == LinearityType_Linear)
+        wf->add_matrix_form(0, 0, callback(heat_matrix_form));
+    else
+        wf->add_matrix_form(0, 0, callback(heat_matrix_form), HERMES_NONSYM, HERMES_ANY, slnArray.at(0));
+
     if (analysisType == AnalysisType_Transient)
         wf->add_vector_form(0, callback(heat_vector_form), HERMES_ANY, slnArray.at(0));
     else
         wf->add_vector_form(0, callback(heat_vector_form));
+
     wf->add_matrix_form_surf(0, 0, callback(heat_matrix_form_surf));
     wf->add_vector_form_surf(0, callback(heat_vector_form_surf));
 }
@@ -497,7 +533,18 @@ QList<SolutionArray *> HermesHeat::solve(ProgressItemSolve *progressItemSolve)
             if (!labelHeatMarker->density.evaluate()) return QList<SolutionArray *>();
             if (!labelHeatMarker->specific_heat.evaluate()) return QList<SolutionArray *>();
 
-            heatLabel[i].thermal_conductivity = labelHeatMarker->thermal_conductivity.number;                       
+            // heatLabel[i].thermal_conductivity.add(0.0, labelHeatMarker->thermal_conductivity.number);
+            if (i == 0)
+            {
+                heatLabel[i].thermal_conductivity.add(0.0, labelHeatMarker->thermal_conductivity.number);
+            }
+            else
+            {
+                double temp_thermal_conductivity[] = { 0, 100, 200, 300, 400, 500, 600, 2000 };
+                double data_thermal_conductivity[] = { 54, 49.4, 46.9, 43.9, 40.2, 37.2, 33.5, 23.0 };
+                heatLabel[i].thermal_conductivity.add(temp_thermal_conductivity, data_thermal_conductivity, 8);
+            }
+            heatLabel[i].volume_heat = labelHeatMarker->volume_heat;
             heatLabel[i].density = labelHeatMarker->density.number;
             heatLabel[i].specific_heat = labelHeatMarker->specific_heat.number;
 

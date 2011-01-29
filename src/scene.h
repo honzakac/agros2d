@@ -59,6 +59,9 @@ public:
     double adaptivityTolerance; // percent
     QString scriptStartup;
     QString description;
+    LinearityType linearityType;
+    double linearityNonlinearTolerance; // percent
+    int linearityNonlinearSteps;
 
     // harmonic
     double frequency;
