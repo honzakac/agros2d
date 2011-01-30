@@ -23,7 +23,7 @@
 #include "util.h"
 #include "scenebasic.h"
 #include "scenemarker.h"
-#include "scenefunction.h"
+#include "datafunction.h"
 #include "scenesolution.h"
 
 #include "localvalueview.h"
@@ -677,7 +677,7 @@ RectPoint Scene::boundingBox() const
     logMessage("RectPoint Scene::boundingBox()");
 
     Point min( numeric_limits<double>::max(), numeric_limits<double>::max());
-    Point max( numeric_limits<double>::min(), numeric_limits<double>::min());
+    Point max( -numeric_limits<double>::max(), -numeric_limits<double>::max());
 
     foreach (SceneNode *node, nodes) {
         if (node->point.x<min.x) min.x = node->point.x;

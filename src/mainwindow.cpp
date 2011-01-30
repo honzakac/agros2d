@@ -36,7 +36,11 @@
 #include "logdialog.h"
 #include "problemdialog.h"
 
+<<<<<<< HEAD
 #include "timefunction.h"
+=======
+#include "datafunction.h"
+>>>>>>> nonlin 2
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -240,6 +244,10 @@ void MainWindow::createActions()
     actCopy->setStatusTip(tr("Copy image to clipboard."));
     connect(actCopy, SIGNAL(triggered()), this, SLOT(doCopy()));
 
+    actPaste = new QAction(icon("edit-copy"), tr("Copy"), this);
+    actPaste->setShortcuts(QKeySequence::Paste);
+    connect(actPaste, SIGNAL(triggered()), this, SLOT(doPaste()));
+
     actHelp = new QAction(icon("help-contents"), tr("&Help"), this);
     actHelp->setStatusTip(tr("Show help"));
     actHelp->setShortcut(QKeySequence::HelpContents);
@@ -360,6 +368,7 @@ void MainWindow::createMenus()
     mnuEdit->addAction(actRedo);
     mnuEdit->addSeparator();
     mnuEdit->addAction(actCopy);
+    mnuEdit->addAction(actPaste);
     mnuEdit->addSeparator();
     mnuEdit->addAction(Util::scene()->actDeleteSelected);
 #ifdef Q_WS_X11
@@ -1093,6 +1102,15 @@ void MainWindow::doCopy()
 void MainWindow::doPaste()
 {
     logMessage("MainWindow::doPaste()");
+
+    double x[] = { 0, 100, 200, 300, 400, 500, 600, 2000 };
+    double y[] = { 54, 49.4, 46.9, 43.9, 40.2, 37.2, 33.5, 23.0 };
+
+    DataTable table(x, y, 8);
+
+    DataTableDialog dataTableDialog(this);
+    dataTableDialog.setTable(&table);
+    dataTableDialog.exec();
 }
 
 void MainWindow::doTimeStepChanged(int index)
