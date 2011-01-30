@@ -18,9 +18,13 @@
 // Email: agros2d@googlegroups.com, home page: http://hpfem.org/agros2d/
 
 #include "util.h"
+
+#include "datatable.h"
 #include "scene.h"
 #include "scripteditordialog.h"
 #include "style/manhattanstyle.h"
+
+#include "hermes2d.h"
 
 bool verbose = false;
 
@@ -983,6 +987,47 @@ void fillComboBoxPhysicField(QComboBox *cmbPhysicField)
         cmbPhysicField->setCurrentIndex(0);
 }
 
+Value::Value()
+{
+    this->text = "0";
+    this->number = 0;
+    this->table = new DataTable();
+}
+
+Value::Value(const QString &value, DataTable *table)
+{
+    this->text = value;
+    this->table = table;
+}
+
+Value::Value(const QString &value, bool evaluateExpression)
+{
+    this->text = value;
+    this->table = new DataTable();
+
+    if (evaluateExpression)
+        evaluate(true); 
+}
+
+Value::~Value()
+{
+    // FIXME
+    // delete table;
+}
+
+double Value::value(double key)
+{
+    if (table->size() == 0)
+        return number;
+    else
+        return table->value(key);
+}
+
+Ord Value::value(Ord key)
+{
+    return 1.0;
+}
+
 bool Value::evaluate(bool quiet)
 {
     logMessage("Value::evaluate()");
@@ -1411,6 +1456,8 @@ Point centerPoint(const Point &pointStart, const Point &pointEnd, double angle)
 
     return center;
 }
+
+// ************************************************************************************************
 
 static CheckVersion *checkVersion = NULL;
 void checkForNewVersion(bool quiet)

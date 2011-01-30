@@ -36,11 +36,9 @@
 #include "logdialog.h"
 #include "problemdialog.h"
 
-<<<<<<< HEAD
 #include "timefunction.h"
-=======
 #include "datafunction.h"
->>>>>>> nonlin 2
+#include "datatabledialog.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {

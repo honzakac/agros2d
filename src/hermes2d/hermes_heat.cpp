@@ -33,7 +33,7 @@ struct HeatEdge
 
 struct HeatLabel
 {
-    DataTable thermal_conductivity;
+    Value thermal_conductivity;
     TimeFunction volume_heat;
     double density;
     double specific_heat;
@@ -533,18 +533,7 @@ QList<SolutionArray *> HermesHeat::solve(ProgressItemSolve *progressItemSolve)
             if (!labelHeatMarker->density.evaluate()) return QList<SolutionArray *>();
             if (!labelHeatMarker->specific_heat.evaluate()) return QList<SolutionArray *>();
 
-            // heatLabel[i].thermal_conductivity.add(0.0, labelHeatMarker->thermal_conductivity.number);
-            if (i == 0)
-            {
-                heatLabel[i].thermal_conductivity.add(0.0, labelHeatMarker->thermal_conductivity.number);
-            }
-            else
-            {
-                double temp_thermal_conductivity[] = { 0, 100, 200, 300, 400, 500, 600, 2000 };
-                double data_thermal_conductivity[] = { 54, 49.4, 46.9, 43.9, 40.2, 37.2, 33.5, 23.0 };
-                heatLabel[i].thermal_conductivity.add(temp_thermal_conductivity, data_thermal_conductivity, 8);
-            }
-            heatLabel[i].volume_heat = labelHeatMarker->volume_heat;
+            heatLabel[i].thermal_conductivity = labelHeatMarker->thermal_conductivity;
             heatLabel[i].density = labelHeatMarker->density.number;
             heatLabel[i].specific_heat = labelHeatMarker->specific_heat.number;
 
@@ -1099,7 +1088,7 @@ DSceneLabelHeatMarker::~DSceneLabelHeatMarker()
 
 void DSceneLabelHeatMarker::createContent()
 {
-    txtThermalConductivity = new SLineEditValue(this);
+    txtThermalConductivity = new SLineEditValue(this, (Util::scene()->problemInfo()->linearityType == LinearityType_Linear));
     txtThermalConductivity->setMinimumSharp(0.0);
     txtVolumeHeat = new TimeFunctionEdit(this);
     txtDensity = new SLineEditValue(this);

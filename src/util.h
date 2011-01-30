@@ -147,8 +147,15 @@ struct Value
     QString text;
     double number;
 
-    Value() { text = "0"; number = 0;}
-    inline Value(const QString &value, bool evaluateExpression = true) { text = value; if (evaluateExpression) evaluate(true); }
+    DataTable *table;
+
+    Value();
+    Value(const QString &value, DataTable *table);
+    Value(const QString &value, bool evaluateExpression = true);
+    ~Value();
+
+    double value(double key = 0.0);
+    Ord value(Ord ord);
 
     bool evaluate(bool quiet = false);
 };

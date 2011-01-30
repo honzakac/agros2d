@@ -85,6 +85,7 @@ SOURCES += util.cpp \
     style/manhattanstyle.cpp \
     timefunction.cpp \
     datatable.cpp \
+    datatabledialog.cpp \
     datafunction.cpp
 HEADERS += util.h \
     scene.h \
@@ -131,6 +132,7 @@ HEADERS += util.h \
     style/manhattanstyle.h \
     timefunction.h \
     datatable.h \
+    datatabledialog.h \
     datafunction.h
 INCLUDEPATH += . \
     dxflib \
