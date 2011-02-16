@@ -266,9 +266,6 @@ void ProblemDialog::fillComboBox()
 #ifdef WITH_SUPERLU
     cmbMatrixSolver->addItem(matrixSolverTypeString(SOLVER_SUPERLU), SOLVER_SUPERLU);
 #endif
-    cmbLinearityType->addItem(linearityTypeString(LinearityType_Linear), LinearityType_Linear);
-    cmbLinearityType->addItem(linearityTypeString(LinearityType_Picard), LinearityType_Picard);
-    cmbLinearityType->addItem(linearityTypeString(LinearityType_Newton), LinearityType_Newton);
 }
 
 void ProblemDialog::load()
@@ -444,9 +441,23 @@ void ProblemDialog::doPhysicFieldChanged(int index)
     if (hermesField->hasSteadyState()) cmbAnalysisType->addItem(analysisTypeString(AnalysisType_SteadyState), AnalysisType_SteadyState);
     if (hermesField->hasHarmonic()) cmbAnalysisType->addItem(analysisTypeString(AnalysisType_Harmonic), AnalysisType_Harmonic);
     if (hermesField->hasTransient()) cmbAnalysisType->addItem(analysisTypeString(AnalysisType_Transient), AnalysisType_Transient);
+
     cmbAnalysisType->setCurrentIndex(cmbAnalysisType->findData(analysisType));
-    if (cmbAnalysisType->currentIndex() == -1) cmbAnalysisType->setCurrentIndex(0);
+    if (cmbAnalysisType->currentIndex() == -1)
+    {
+        cmbAnalysisType->setCurrentIndex(0);
+    }
     doAnalysisTypeChanged(cmbAnalysisType->currentIndex());
+
+    // nonlinearity
+    cmbLinearityType->clear();
+    cmbLinearityType->addItem(linearityTypeString(LinearityType_Linear), LinearityType_Linear);
+    if (hermesField->hasNonlinearity())
+    {
+        cmbLinearityType->addItem(linearityTypeString(LinearityType_Picard), LinearityType_Picard);
+        cmbLinearityType->addItem(linearityTypeString(LinearityType_Newton), LinearityType_Newton);
+    }
+    doLinearityTypeChanged(cmbLinearityType->currentIndex());
 
     delete hermesField;
 
