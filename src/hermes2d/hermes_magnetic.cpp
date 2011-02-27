@@ -1123,6 +1123,7 @@ QList<SolutionArray *> HermesMagnetic::solve(ProgressItemSolve *progressItemSolv
     return solutionArrayList;
 }
 
+<<<<<<< HEAD
 // ****************************************************************************************************************
 /*
 LocalPointValueMagnetic::LocalPointValueMagnetic(Point &point) : LocalPointValue(point)
@@ -2711,6 +2712,8 @@ void ViewScalarFilterMagnetic::calculateVariable(int i)
 }
 
 */
+=======
+>>>>>>> fixes
 // *************************************************************************************************************************************
 
 SceneEdgeMagneticMarker::SceneEdgeMagneticMarker(const QString &name, PhysicFieldBC type, Value value_real, Value value_imag) : SceneEdgeMarker(name, type)
