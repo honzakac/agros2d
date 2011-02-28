@@ -19,11 +19,16 @@ cdef extern from "../scripteditorcommandpython.h":
                            int numberofrefinements, int polynomialorder, char *adaptivitytype,
                            double adaptivitysteps, double adaptivitytolerance,
                            double frequency,
-                           char *analysistype, double timestep, double totaltime, double initialcondition) except +
+                           char *analysistype, double timestep, double totaltime, double initialcondition,
+                           char *linearitytype, double nonlinearitytolerance, int nonlinearitysteps) except +
     void pythonOpenDocument(char *str) except +
     void pythonSaveDocument(char *str) except +
+<<<<<<< HEAD
     void pythonCloseDocument()
     
+=======
+
+>>>>>>> added support for solving nonlinear problems by scripts (not completed)
     void pythonAddNode(double x, double y) except +
     void pythonAddEdge(double x1, double y1, double x2, double y2, double angle, char *marker) except +
     void pythonAddLabel(double x, double y, double area, int polynomialOrder, char *marker) except +
@@ -96,12 +101,14 @@ def newdocument(char *name, char *type, char *physicfield,
                int numberofrefinements = 0, int polynomialorder = 1, char *adaptivitytype = "disabled",
                double adaptivitysteps = 1, double adaptivitytolerance = 0,
                double frequency = 0,
-               char *analysistype = "steadystate", double timestep = 0, double totaltime = 0, double initialcondition = 0):
+               char *analysistype = "steadystate", double timestep = 0, double totaltime = 0, double initialcondition = 0,
+               char *linearitytype = "linear", double nonlinearitytolerance = 0, int nonlinearitysteps = 1):
     pythonNewDocument(name, type, physicfield,
                        numberofrefinements, polynomialorder, adaptivitytype,
                        adaptivitysteps, adaptivitytolerance,
                        frequency,
-                       analysistype, timestep, totaltime, initialcondition)
+                       analysistype, timestep, totaltime, initialcondition,
+                       linearitytype, nonlinearitytolerance, nonlinearitysteps)
 
 def opendocument(char *str):
     pythonOpenDocument(str)
@@ -152,7 +159,7 @@ def selectnodepoint(double x, double y):
 
 def selectedgepoint(double x, double y):
     pythonSelectEdgePoint(x, y)
-    
+
 def selectlabelpoint(double x, double y):
     pythonSelectLabelPoint(x, y)
 
@@ -177,7 +184,7 @@ def solve():
     pythonSolve()
 
 # postprocessor
-    
+
 def zoombestfit():
     pythonZoomBestFit()
 

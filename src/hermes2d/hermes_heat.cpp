@@ -432,40 +432,51 @@ SceneLabelMarker *HermesHeat::newLabelMarker()
 
 SceneLabelMarker *HermesHeat::newLabelMarker(PyObject *self, PyObject *args)
 {
+    // FIXME
     double volume_heat, thermal_conductivity, density, specific_heat;
-    char *name;
-    if (PyArg_ParseTuple(args, "sdddd", &name, &volume_heat, &thermal_conductivity, &density, &specific_heat))
+    char *name, *thermal_conductivity_nonlin, *density_nonlin, *specific_heat_nonlin;
+
+    if (PyArg_UnpackTuple(args, "ref", 5, 5, &name, &volume_heat, &thermal_conductivity_nonlin, &density, &specific_heat))
     {
         // check name
         if (Util::scene()->getLabelMarker(name)) return NULL;
 
         return new SceneLabelHeatMarker(name,
                                         TimeFunction(QString::number(volume_heat)),
-                                        Value(QString::number(thermal_conductivity)),
+                                        Value(QString::number(volume_heat)),
+                                        Value(QString(thermal_conductivity_nonlin)),
                                         Value(QString::number(density)),
                                         Value(QString::number(specific_heat)));
     }
-    else if (PyArg_ParseTuple(args, "sdsdd", &name, &volume_heat, &thermal_conductivity, &density, &specific_heat))
-    {
-    }
-    else if (PyArg_ParseTuple(args, "sddsd", &name, &volume_heat, &thermal_conductivity, &density, &specific_heat))
-    {
-    }
-    else if (PyArg_ParseTuple(args, "sddds", &name, &volume_heat, &thermal_conductivity, &density, &specific_heat))
-    {
-    }
-    else if (PyArg_ParseTuple(args, "sdssd", &name, &volume_heat, &thermal_conductivity, &density, &specific_heat))
-    {
-    }
-    else if (PyArg_ParseTuple(args, "sdsds", &name, &volume_heat, &thermal_conductivity, &density, &specific_heat))
-    {
-    }
-    else if (PyArg_ParseTuple(args, "sddss", &name, &volume_heat, &thermal_conductivity, &density, &specific_heat))
-    {
-    }
-    else if (PyArg_ParseTuple(args, "sdsss", &name, &volume_heat, &thermal_conductivity, &density, &specific_heat))
-    {
-    }
+//    else if (PyArg_ParseTuple(args, "sdddd", &name, &volume_heat, &thermal_conductivity, &density, &specific_heat))
+//    {
+//        // check name
+//        if (Util::scene()->getLabelMarker(name)) return NULL;
+
+//        return new SceneLabelHeatMarker(name,
+//                                        Value(QString::number(volume_heat)),
+//                                        Value(QString::number(thermal_conductivity)),
+//                                        Value(QString::number(density)),
+//                                        Value(QString::number(specific_heat)));
+//    }
+//    else if (PyArg_ParseTuple(args, "sddsd", &name, &volume_heat, &thermal_conductivity, &density_nonlin, &specific_heat))
+//    {
+//    }
+//    else if (PyArg_ParseTuple(args, "sddds", &name, &volume_heat, &thermal_conductivity, &density, &specific_heat_nonlin))
+//    {
+//    }
+//    else if (PyArg_ParseTuple(args, "sdssd", &name, &volume_heat, &thermal_conductivity_nonlin, &density_nonlin, &specific_heat))
+//    {
+//    }
+//    else if (PyArg_ParseTuple(args, "sdsds", &name, &volume_heat, &thermal_conductivity_nonlin, &density, &specific_heat_nonlin))
+//    {
+//    }
+//    else if (PyArg_ParseTuple(args, "sddss", &name, &volume_heat, &thermal_conductivity, &density_nonlin, &specific_heat_nonlin))
+//    {
+//    }
+//    else if (PyArg_ParseTuple(args, "sdsss", &name, &volume_heat, &thermal_conductivity_nonlin, &density_nonlin, &specific_heat_nonlin))
+//    {
+//    }
 
     return NULL;
 }
@@ -1020,7 +1031,6 @@ SceneLabelHeatMarker::SceneLabelHeatMarker(const QString &name, TimeFunction vol
 
 QString SceneLabelHeatMarker::script()
 {
-<<<<<<< HEAD
     if (Util::scene()->problemInfo()->analysisType == AnalysisType_SteadyState)
         return QString("addmaterial(\"%1\", %2, %3, %4, %5)").
                 arg(name).
@@ -1045,12 +1055,12 @@ QString SceneLabelHeatMarker::script()
                 arg(specific_heat.text());
 
     if ((Util::scene()->problemInfo()->linearityType == LinearityType_Picard) || (Util::scene()->problemInfo()->linearityType == LinearityType_Newton))
-        return QString("addmaterial(\"%1\", %2, \"%3\", %4, %5)").
+        return QString("addmaterial(\"%1\", %2, \"%3\", \"%4\", \"%5\)").
                 arg(name).
                 arg(volume_heat.text()).
                 arg(thermal_conductivity.toString()).
-                arg(density.text()).
-                arg(specific_heat.text());
+                arg(density.toString()).
+                arg(specific_heat.toString());
     */
 }
 

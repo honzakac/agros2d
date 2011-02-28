@@ -154,19 +154,7 @@ void refineMesh(Mesh *mesh, bool refineGlobal, bool refineTowardsEdge)
 
 SolutionAgros::SolutionAgros(ProgressItemSolve *progressItemSolve)
 {
-<<<<<<< HEAD
-    dp->assemble(matrix, rhs, rhsOnly);
-
-    if(solver->solve())
-    {
-        Solution::vector_to_solutions(solver->get_solution(), space, solution);
-        return true;
-    }
-    else
-    {
-        progressItemSolve->emitMessage(QObject::tr("Matrix solver failed."), true, 1);
-        return false;
-    }
+    m_progressItemSolve = progressItemSolve;
 }
 
 SolutionArray *solutionArray(Solution *sln, Space *space = NULL, double adaptiveError = 0.0, double adaptiveSteps = 0.0, double time = 0.0)
