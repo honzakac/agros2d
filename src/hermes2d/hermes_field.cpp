@@ -322,7 +322,8 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<BCTypes *
 
             if (adaptivityType == AdaptivityType_None)
             {
-                solve(&wf, space, solution, solver, matrix, rhs, false);
+                if (analysisType == AnalysisType_SteadyState)
+                    solve(&wf, space, solution, solver, matrix, rhs, false);
             }
             else
             {
@@ -432,8 +433,11 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<BCTypes *
                 actualTime = (n+1)*timeStep;
 
                 // transient
-                if (timesteps > 1)
+                if ((timesteps > 1) && (linearityType == LinearityType_Linear))
                     isError = !solveLinear(dpTran, space, solution,
+                                           solver, matrix, rhs, (n > 0));
+                if ((timesteps > 1) && (linearityType != LinearityType_Linear))
+                    isError = !solve(&wf, space, solution,
                                            solver, matrix, rhs, (n > 0));
 
                 // output
@@ -484,7 +488,6 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<BCTypes *
             delete solutionArrayList.at(i);
         solutionArrayList.clear();
     }
-
     return solutionArrayList;
 }
 
@@ -512,11 +515,14 @@ bool SolutionAgros::solve(WeakForm *wf,
                           Hermes::vector<Solution *> solution,
                           Solver *solver, SparseMatrix *matrix, Vector *rhs, bool rhsOnly)
 {
+    bool isError = false;
     if (linearityType == LinearityType_Linear)
     {
         DiscreteProblem dpLin(wf, space, true);
         isError = !solveLinear(&dpLin, space, solution,
                                solver, matrix, rhs, rhsOnly);
+
+        return !isError;
     }
 
     if (linearityType == LinearityType_Picard)
@@ -582,6 +588,8 @@ bool SolutionAgros::solve(WeakForm *wf,
         for (int i = 0; i < solutionPicard.size(); i++)
             delete solutionPicard.at(i);
         solutionPicard.clear();
+
+        return !isError;
     }
 
     if (linearityType == LinearityType_Newton)
@@ -625,7 +633,8 @@ bool SolutionAgros::solve(WeakForm *wf,
                 break;
 
             // Solve the linear system.
-            if(!solver->solve())
+            isError = solver->solve();
+            if (!isError)
                 error("Matrix solver failed.\n");
 
             // add \deltaY^{n+1} to Y^n.
