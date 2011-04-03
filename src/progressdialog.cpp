@@ -749,7 +749,7 @@ ProgressItemSolve::ProgressItemSolve() : ProgressItem()
         Util::scene()->problemInfo()->timeTotal.evaluate();
         Util::scene()->problemInfo()->timeStep.evaluate();
 
-        m_steps += floor(Util::scene()->problemInfo()->timeTotal.number / Util::scene()->problemInfo()->timeStep.number);
+        m_steps += floor(Util::scene()->problemInfo()->timeTotal.number() / Util::scene()->problemInfo()->timeStep.number());
     }
 }
 

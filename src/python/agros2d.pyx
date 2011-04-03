@@ -23,12 +23,8 @@ cdef extern from "../scripteditorcommandpython.h":
                            char *linearitytype, double nonlinearitytolerance, int nonlinearitysteps) except +
     void pythonOpenDocument(char *str) except +
     void pythonSaveDocument(char *str) except +
-<<<<<<< HEAD
     void pythonCloseDocument()
     
-=======
-
->>>>>>> added support for solving nonlinear problems by scripts (not completed)
     void pythonAddNode(double x, double y) except +
     void pythonAddEdge(double x1, double y1, double x2, double y2, double angle, char *marker) except +
     void pythonAddLabel(double x, double y, double area, int polynomialOrder, char *marker) except +

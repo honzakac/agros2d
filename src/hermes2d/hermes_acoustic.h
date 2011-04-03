@@ -42,6 +42,7 @@ public:
     return false;
 #endif
     }
+    bool hasNonlinearity() { return false; }
 
     void readEdgeMarkerFromDomElement(QDomElement *element);
     void writeEdgeMarkerToDomElement(QDomElement *element, SceneEdgeMarker *marker);

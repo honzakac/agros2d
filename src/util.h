@@ -46,6 +46,9 @@ const double NDOF_STOP = 40000;
 #define deg2rad(degrees) (degrees*M_PI/180.0)
 #define rad2deg(radians) (radians*180.0/M_PI)
 
+class DataTable;
+class Ord;
+
 using namespace std;
 
 // verbose

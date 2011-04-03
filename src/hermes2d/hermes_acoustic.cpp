@@ -349,15 +349,15 @@ void HermesAcoustic::writeEdgeMarkerToDomElement(QDomElement *element, SceneEdge
     switch (edgeAcousticMarker->type)
     {
     case PhysicFieldBC_Acoustic_Pressure:
-        element->setAttribute("pressure", edgeAcousticMarker->value_real.text);
+        element->setAttribute("pressure", edgeAcousticMarker->value_real.text());
         element->setAttribute("pressure_transient", edgeAcousticMarker->value_transient.function());
         break;
     case PhysicFieldBC_Acoustic_NormalAcceleration:
-        element->setAttribute("acceleration", edgeAcousticMarker->value_real.text);
+        element->setAttribute("acceleration", edgeAcousticMarker->value_real.text());
         element->setAttribute("acceleration_transient", edgeAcousticMarker->value_transient.function());
         break;
     case PhysicFieldBC_Acoustic_Impedance:
-        element->setAttribute("impedance", edgeAcousticMarker->value_real.text);
+        element->setAttribute("impedance", edgeAcousticMarker->value_real.text());
         break;
     case PhysicFieldBC_Acoustic_MatchedBoundary:
         break;
@@ -379,8 +379,8 @@ void HermesAcoustic::writeLabelMarkerToDomElement(QDomElement *element, SceneLab
 {
     SceneLabelAcousticMarker *labelAcousticMarker = dynamic_cast<SceneLabelAcousticMarker *>(marker);
 
-    element->setAttribute("density", labelAcousticMarker->density.text);
-    element->setAttribute("speed", labelAcousticMarker->speed.text);
+    element->setAttribute("density", labelAcousticMarker->density.text());
+    element->setAttribute("speed", labelAcousticMarker->speed.text());
 }
 
 LocalPointValue *HermesAcoustic::localPointValue(const Point &point)
@@ -680,12 +680,12 @@ QList<SolutionArray *> HermesAcoustic::solve(ProgressItemSolve *progressItemSolv
             if (!edgeAcousticMarker->value_real.evaluate()) return QList<SolutionArray *>();
 
             acousticEdge[i+1].type = edgeAcousticMarker->type;
-            acousticEdge[i+1].value = edgeAcousticMarker->value_real.number;
+            acousticEdge[i+1].value = edgeAcousticMarker->value_real.number();
             if (Util::scene()->problemInfo()->analysisType == AnalysisType_Transient)
             {
-                if (fabs(edgeAcousticMarker->value_transient.timeMax() - Util::scene()->problemInfo()->timeTotal.number) > EPS_ZERO)
+                if (fabs(edgeAcousticMarker->value_transient.timeMax() - Util::scene()->problemInfo()->timeTotal.number()) > EPS_ZERO)
                 {
-                    edgeAcousticMarker->value_transient.setTimeMax(Util::scene()->problemInfo()->timeTotal.number);
+                    edgeAcousticMarker->value_transient.setTimeMax(Util::scene()->problemInfo()->timeTotal.number());
                     edgeAcousticMarker->value_transient.fillValues();
                 }
                 acousticEdge[i+1].valueTransient = edgeAcousticMarker->value_transient;
@@ -702,7 +702,7 @@ QList<SolutionArray *> HermesAcoustic::solve(ProgressItemSolve *progressItemSolv
                 {
                     bcTypesReal.add_bc_dirichlet(i+1);
                     bcTypesImag.add_bc_dirichlet(i+1);
-                    bcValuesReal.add_const(i+1, edgeAcousticMarker->value_real.number);
+                    bcValuesReal.add_const(i+1, edgeAcousticMarker->value_real.number());
                     bcValuesImag.add_const(i+1, 0.0);
                 }
                 else
@@ -711,7 +711,7 @@ QList<SolutionArray *> HermesAcoustic::solve(ProgressItemSolve *progressItemSolv
                     if (edgeAcousticMarker->value_transient.isValid())
                         bcValuesReal.add_timedep_function(i+1, acoustic_essential_time_bc_pressure);
                     else
-                        bcValuesReal.add_const(i+1, edgeAcousticMarker->value_real.number);
+                        bcValuesReal.add_const(i+1, edgeAcousticMarker->value_real.number());
                     // bcTypesImag.add_bc_dirichlet(i+1);
                     // bcTypesImag.add_bc_none(i+1);
                     // bcValuesImag.add_const(i+1, 0.0);
@@ -744,15 +744,16 @@ QList<SolutionArray *> HermesAcoustic::solve(ProgressItemSolve *progressItemSolv
             if (!labelAcousticMarker->density.evaluate()) return QList<SolutionArray *>();
             if (!labelAcousticMarker->speed.evaluate()) return QList<SolutionArray *>();
 
-            acousticLabel[i].density = labelAcousticMarker->density.number;
-            acousticLabel[i].speed = labelAcousticMarker->speed.number;
+            acousticLabel[i].density = labelAcousticMarker->density.number();
+            acousticLabel[i].speed = labelAcousticMarker->speed.number();
         }
     }
 
-    QList<SolutionArray *> solutionArrayList = solveSolutioArray(progressItemSolve,
-                                                                 Hermes::vector<BCTypes *>(&bcTypesReal, &bcTypesImag),
-                                                                 Hermes::vector<BCValues *>(&bcValuesReal, &bcValuesImag),
-                                                                 callbackAcousticWeakForm);
+    SolutionAgros solutionAgros(progressItemSolve);
+
+    QList<SolutionArray *> solutionArrayList = solutionAgros.solveSolutioArray(Hermes::vector<BCTypes *>(&bcTypesReal, &bcTypesImag),
+                                                                               Hermes::vector<BCValues *>(&bcValuesReal, &bcValuesImag),
+                                                                               callbackAcousticWeakForm);
 
     delete [] acousticEdge;
     delete [] acousticLabel;
@@ -781,8 +782,8 @@ LocalPointValueAcoustic::LocalPointValueAcoustic(const Point &point) : LocalPoin
         // solution
         if (marker != NULL)
         {            
-            density = marker->density.number;
-            speed = marker->speed.number;
+            density = marker->density.number();
+            speed = marker->speed.number();
 
             if (Util::scene()->problemInfo()->analysisType == AnalysisType_Harmonic)
             {
@@ -805,7 +806,7 @@ LocalPointValueAcoustic::LocalPointValueAcoustic(const Point &point) : LocalPoin
                 localVelocity.y = localAccelaration.y / (2 * M_PI * frequency);
 
                 pressureLevel = (sqrt(sqr(valueReal.value) + sqr(valueImag.value)) > PRESSURE_MIN_AIR) ?
-                        20.0 * log10(sqrt(sqr(valueReal.value) + sqr(valueImag.value)) / sqrt(2.0) / PRESSURE_MIN_AIR) : 0.0;
+                            20.0 * log10(sqrt(sqr(valueReal.value) + sqr(valueImag.value)) / sqrt(2.0) / PRESSURE_MIN_AIR) : 0.0;
             }
             if (Util::scene()->problemInfo()->analysisType == AnalysisType_Transient)
             {
@@ -957,10 +958,10 @@ void ViewScalarFilterAcoustic::calculateVariable(int i)
     {
         if (Util::scene()->problemInfo()->analysisType == AnalysisType_Harmonic)
             node->values[0][0][i] = (sqrt(sqr(value1[i]) + sqr(value2[i])) > PRESSURE_MIN_AIR) ?
-                    20.0 * log10(sqrt(sqr(value1[i]) + sqr(value2[i])) / sqrt(2.0) / PRESSURE_MIN_AIR) : 0.0;
+                        20.0 * log10(sqrt(sqr(value1[i]) + sqr(value2[i])) / sqrt(2.0) / PRESSURE_MIN_AIR) : 0.0;
         else if (Util::scene()->problemInfo()->analysisType == AnalysisType_Transient)
             node->values[0][0][i] = (value1[i] > PRESSURE_MIN_AIR) ?
-                    20.0 * log10(value1[i] / PRESSURE_MIN_AIR) : 0.0;
+                        20.0 * log10(value1[i] / PRESSURE_MIN_AIR) : 0.0;
     }
         break;
     case PhysicFieldVariable_Acoustic_LocalVelocity:
@@ -971,17 +972,17 @@ void ViewScalarFilterAcoustic::calculateVariable(int i)
         {
         case PhysicFieldVariableComp_X:
         {
-            node->values[0][0][i] = - dudx1[i] / marker->density.number / (2 * M_PI * frequency);
+            node->values[0][0][i] = - dudx1[i] / marker->density.number() / (2 * M_PI * frequency);
         }
             break;
         case PhysicFieldVariableComp_Y:
         {
-            node->values[0][0][i] = - dudy1[i] / marker->density.number / (2 * M_PI * frequency);
+            node->values[0][0][i] = - dudy1[i] / marker->density.number() / (2 * M_PI * frequency);
         }
             break;
         case PhysicFieldVariableComp_Magnitude:
         {
-            node->values[0][0][i] = sqrt(sqr(dudx1[i]) + sqr(dudy1[i])) / marker->density.number / (2 * M_PI * frequency);;
+            node->values[0][0][i] = sqrt(sqr(dudx1[i]) + sqr(dudy1[i])) / marker->density.number() / (2 * M_PI * frequency);;
         }
             break;
         }
@@ -995,17 +996,17 @@ void ViewScalarFilterAcoustic::calculateVariable(int i)
         {
         case PhysicFieldVariableComp_X:
         {
-            node->values[0][0][i] = - dudx1[i] / marker->density.number;
+            node->values[0][0][i] = - dudx1[i] / marker->density.number();
         }
             break;
         case PhysicFieldVariableComp_Y:
         {
-            node->values[0][0][i] = - dudy1[i] / marker->density.number;
+            node->values[0][0][i] = - dudy1[i] / marker->density.number();
         }
             break;
         case PhysicFieldVariableComp_Magnitude:
         {
-            node->values[0][0][i] = sqrt(sqr(dudx1[i]) + sqr(dudy1[i])) / marker->density.number;
+            node->values[0][0][i] = sqrt(sqr(dudx1[i]) + sqr(dudy1[i])) / marker->density.number();
         }
             break;
         }
@@ -1014,13 +1015,13 @@ void ViewScalarFilterAcoustic::calculateVariable(int i)
     case PhysicFieldVariable_Acoustic_Density:
     {
         SceneLabelAcousticMarker *marker = dynamic_cast<SceneLabelAcousticMarker *>(labelMarker);
-        node->values[0][0][i] = marker->density.number;
+        node->values[0][0][i] = marker->density.number();
     }
         break;
     case PhysicFieldVariable_Acoustic_Speed:
     {
         SceneLabelAcousticMarker *marker = dynamic_cast<SceneLabelAcousticMarker *>(labelMarker);
-        node->values[0][0][i] = marker->speed.number;
+        node->values[0][0][i] = marker->speed.number();
     }
         break;
     default:
@@ -1033,7 +1034,7 @@ void ViewScalarFilterAcoustic::calculateVariable(int i)
 // *************************************************************************************************************************************
 
 SceneEdgeAcousticMarker::SceneEdgeAcousticMarker(const QString &name, PhysicFieldBC type, Value value_real, TimeFunction value_transient)
- : SceneEdgeMarker(name, type)
+    : SceneEdgeMarker(name, type)
 {
     this->value_real = value_real;
     this->value_transient = value_transient;
@@ -1054,13 +1055,13 @@ QString SceneEdgeAcousticMarker::script()
         return QString("addboundary(\"%1\", \"%2\", %3, \"%4\")").
                 arg(name).
                 arg(physicFieldBCToStringKey(type)).
-                arg(value_real.text).
+                arg(value_real.text()).
                 arg(value_transient.function());
     else
         return QString("addboundary(\"%1\", \"%2\", %3)").
                 arg(name).
                 arg(physicFieldBCToStringKey(type)).
-                arg(value_real.text);
+                arg(value_real.text());
 }
 
 QMap<QString, QString> SceneEdgeAcousticMarker::data()
@@ -1069,13 +1070,13 @@ QMap<QString, QString> SceneEdgeAcousticMarker::data()
     switch (type)
     {
     case PhysicFieldBC_Acoustic_Pressure:
-        out["Pressure (Pa)"] = value_real.text;
+        out["Pressure (Pa)"] = value_real.text();
         break;
     case PhysicFieldBC_Acoustic_NormalAcceleration:
-        out["Normal acceleration (m/s2)"] = value_real.text;
+        out["Normal acceleration (m/s2)"] = value_real.text();
         break;
     case PhysicFieldBC_Acoustic_Impedance:
-        out["Input impedance (Pa.s/m)"] = value_real.text;
+        out["Input impedance (Pa.s/m)"] = value_real.text();
         break;
     case PhysicFieldBC_Acoustic_MatchedBoundary:
         break;
@@ -1102,15 +1103,15 @@ QString SceneLabelAcousticMarker::script()
 {
     return QString("addmaterial(\"%1\", %2, %3)").
             arg(name).
-            arg(density.text).
-            arg(speed.text);
+            arg(density.text()).
+            arg(speed.text());
 }
 
 QMap<QString, QString> SceneLabelAcousticMarker::data()
 {
     QMap<QString, QString> out;
-    out["Density (-)"] = density.text;
-    out["Speed (-)"] = speed.text;
+    out["Density (-)"] = density.text();
+    out["Speed (-)"] = speed.text();
     return QMap<QString, QString>(out);
 }
 
@@ -1173,7 +1174,7 @@ void DSceneEdgeAcousticMarker::load()
     if (Util::scene()->problemInfo()->analysisType == AnalysisType_Transient)
     {
         Util::scene()->problemInfo()->timeTotal.evaluate();
-        edgeAcousticMarker->value_transient.setTimeMax(Util::scene()->problemInfo()->timeTotal.number);
+        edgeAcousticMarker->value_transient.setTimeMax(Util::scene()->problemInfo()->timeTotal.number());
         edgeAcousticMarker->value_transient.fillValues(true);
         txtValueTransient->setTimeFunction(edgeAcousticMarker->value_transient);
     }

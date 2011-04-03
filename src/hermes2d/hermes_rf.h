@@ -34,6 +34,7 @@ public:
     bool hasSteadyState() { return false; }
     bool hasHarmonic() { return true; }
     bool hasTransient() { return false; }
+    bool hasNonlinearity() { return false; }
 
     void readEdgeMarkerFromDomElement(QDomElement *element);
     void writeEdgeMarkerToDomElement(QDomElement *element, SceneEdgeMarker *marker);

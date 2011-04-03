@@ -304,12 +304,12 @@ void HermesRF::writeEdgeMarkerToDomElement(QDomElement *element, SceneEdgeMarker
     case PhysicFieldBC_RF_ElectricField:
     case PhysicFieldBC_RF_MagneticField:
     case PhysicFieldBC_RF_MatchedBoundary:
-        element->setAttribute("value_real", edgeRFMarker->value_real.text);
-        element->setAttribute("value_imag", edgeRFMarker->value_imag.text);
+        element->setAttribute("value_real", edgeRFMarker->value_real.text());
+        element->setAttribute("value_imag", edgeRFMarker->value_imag.text());
         break;
     case PhysicFieldBC_RF_Port:
-        element->setAttribute("power", edgeRFMarker->value_real.text);
-        element->setAttribute("phase", edgeRFMarker->value_imag.text);
+        element->setAttribute("power", edgeRFMarker->value_real.text());
+        element->setAttribute("phase", edgeRFMarker->value_imag.text());
         break;
     default:
         std::cerr << tr("Boundary type '%1' doesn't exists.").arg(element->attribute("type")).toStdString() << endl;
@@ -332,11 +332,11 @@ void HermesRF::writeLabelMarkerToDomElement(QDomElement *element, SceneLabelMark
 {
     SceneLabelRFMarker *labelRFMarker = dynamic_cast<SceneLabelRFMarker *>(marker);
 
-    element->setAttribute("permittivity", labelRFMarker->permittivity.text);
-    element->setAttribute("permeability", labelRFMarker->permeability.text);
-    element->setAttribute("conductivity", labelRFMarker->conductivity.text);
-    element->setAttribute("J_ext_real", labelRFMarker->J_ext_real.text);
-    element->setAttribute("J_ext_imag", labelRFMarker->J_ext_imag.text);
+    element->setAttribute("permittivity", labelRFMarker->permittivity.text());
+    element->setAttribute("permeability", labelRFMarker->permeability.text());
+    element->setAttribute("conductivity", labelRFMarker->conductivity.text());
+    element->setAttribute("J_ext_real", labelRFMarker->J_ext_real.text());
+    element->setAttribute("J_ext_imag", labelRFMarker->J_ext_imag.text());
 }
 
 LocalPointValue *HermesRF::localPointValue(const Point &point)
@@ -607,8 +607,8 @@ QList<SolutionArray *> HermesRF::solve(ProgressItemSolve *progressItemSolve)
             if (!edgeRFMarker->value_imag.evaluate()) return QList<SolutionArray *>();
 
             rfEdge[i+1].type = edgeRFMarker->type;
-            rfEdge[i+1].value_real = edgeRFMarker->value_real.number;
-            rfEdge[i+1].value_imag = edgeRFMarker->value_imag.number;
+            rfEdge[i+1].value_real = edgeRFMarker->value_real.number();
+            rfEdge[i+1].value_imag = edgeRFMarker->value_imag.number();
             rfEdge[i+1].start = Util::scene()->edges[i]->nodeStart->point;
             rfEdge[i+1].end = Util::scene()->edges[i]->nodeEnd->point;
             rfEdge[i+1].angle = Util::scene()->edges[i]->angle;
@@ -622,8 +622,8 @@ QList<SolutionArray *> HermesRF::solve(ProgressItemSolve *progressItemSolve)
             case PhysicFieldBC_RF_ElectricField:
                 bcTypesReal.add_bc_dirichlet(i+1);
                 bcTypesImag.add_bc_dirichlet(i+1);
-                bcValuesReal.add_const(i+1, edgeRFMarker->value_real.number);
-                bcValuesImag.add_const(i+1, edgeRFMarker->value_imag.number);
+                bcValuesReal.add_const(i+1, edgeRFMarker->value_real.number());
+                bcValuesImag.add_const(i+1, edgeRFMarker->value_imag.number());
                 break;
             case PhysicFieldBC_RF_MagneticField:
                 bcTypesReal.add_bc_neumann(i+1);
@@ -655,18 +655,19 @@ QList<SolutionArray *> HermesRF::solve(ProgressItemSolve *progressItemSolve)
             if (!labelRFMarker->J_ext_real.evaluate()) return QList<SolutionArray *>();
             if (!labelRFMarker->J_ext_imag.evaluate()) return QList<SolutionArray *>();
 
-            rfLabel[i].permittivity = labelRFMarker->permittivity.number;
-            rfLabel[i].permeability = labelRFMarker->permeability.number;
-            rfLabel[i].conductivity = labelRFMarker->conductivity.number;
-            rfLabel[i].J_ext_real = labelRFMarker->J_ext_real.number;
-            rfLabel[i].J_ext_imag = labelRFMarker->J_ext_imag.number;
+            rfLabel[i].permittivity = labelRFMarker->permittivity.number();
+            rfLabel[i].permeability = labelRFMarker->permeability.number();
+            rfLabel[i].conductivity = labelRFMarker->conductivity.number();
+            rfLabel[i].J_ext_real = labelRFMarker->J_ext_real.number();
+            rfLabel[i].J_ext_imag = labelRFMarker->J_ext_imag.number();
         }
     }
 
-    QList<SolutionArray *> solutionArrayList = solveSolutioArray(progressItemSolve,
-                                                                 Hermes::vector<BCTypes *>(&bcTypesReal, &bcTypesImag),
-                                                                 Hermes::vector<BCValues *>(&bcValuesReal, &bcValuesImag),
-                                                                 callbackRFWeakForm);
+    SolutionAgros solutionAgros(progressItemSolve);
+
+    QList<SolutionArray *> solutionArrayList = solutionAgros.solveSolutioArray(Hermes::vector<BCTypes *>(&bcTypesReal, &bcTypesImag),
+                                                                               Hermes::vector<BCValues *>(&bcValuesReal, &bcValuesImag),
+                                                                               callbackRFWeakForm);
 
     delete [] rfEdge;
     delete [] rfLabel;
@@ -726,11 +727,11 @@ LocalPointValueRF::LocalPointValueRF(const Point &point) : LocalPointValue(point
                     electric_field_imag = valueImag.value;
                 }
 
-                permittivity = marker->permittivity.number;
-                permeability = marker->permeability.number;
-                conductivity = marker->conductivity.number;
-                J_ext_real = marker->J_ext_real.number;
-                J_ext_imag = marker->J_ext_imag.number;
+                permittivity = marker->permittivity.number();
+                permeability = marker->permeability.number();
+                conductivity = marker->conductivity.number();
+                J_ext_real = marker->J_ext_real.number();
+                J_ext_imag = marker->J_ext_imag.number();
             }
         }
     }
@@ -936,15 +937,15 @@ void ViewScalarFilterRF::calculateVariable(int i)
         SceneLabelRFMarker *marker = dynamic_cast<SceneLabelRFMarker *>(labelMarker);
         if (Util::scene()->problemInfo()->problemType == ProblemType_Planar)
         {
-            node->values[0][0][i] = 0.25 * (sqr(dudx1[i]) + sqr(dudy1[i])) / (marker->permeability.number * MU0);
+            node->values[0][0][i] = 0.25 * (sqr(dudx1[i]) + sqr(dudy1[i])) / (marker->permeability.number() * MU0);
             if (Util::scene()->problemInfo()->analysisType == AnalysisType_Harmonic)
-                node->values[0][0][i] += 0.25 * (sqr(dudx2[i]) + sqr(dudy2[i])) / (marker->permeability.number * MU0);
+                node->values[0][0][i] += 0.25 * (sqr(dudx2[i]) + sqr(dudy2[i])) / (marker->permeability.number() * MU0);
         }
         else
         {
-            node->values[0][0][i] = 0.25 * (sqr(dudy1[i]) + sqr(dudx1[i] + ((x[i] > 0) ? value1[i] / x[i] : 0.0))) / (marker->permeability.number * MU0);
+            node->values[0][0][i] = 0.25 * (sqr(dudy1[i]) + sqr(dudx1[i] + ((x[i] > 0) ? value1[i] / x[i] : 0.0))) / (marker->permeability.number() * MU0);
             if (Util::scene()->problemInfo()->analysisType == AnalysisType_Harmonic)
-                node->values[0][0][i] += 0.25 * (sqr(dudy2[i]) + sqr(dudx2[i] + ((x > 0) ? value2[i] / x[i] : 0.0))) / (marker->permeability.number * MU0);
+                node->values[0][0][i] += 0.25 * (sqr(dudy2[i]) + sqr(dudx2[i] + ((x > 0) ? value2[i] / x[i] : 0.0))) / (marker->permeability.number() * MU0);
         }
     }
     case PhysicFieldVariable_RF_PowerLosses: // prepocitat a upravit !!!
@@ -952,46 +953,46 @@ void ViewScalarFilterRF::calculateVariable(int i)
         SceneLabelRFMarker *marker = dynamic_cast<SceneLabelRFMarker *>(labelMarker);
         if (Util::scene()->problemInfo()->problemType == ProblemType_Planar)
         {
-            node->values[0][0][i] = 0.25 * (sqr(dudx1[i]) + sqr(dudy1[i])) / (marker->permeability.number * MU0);
+            node->values[0][0][i] = 0.25 * (sqr(dudx1[i]) + sqr(dudy1[i])) / (marker->permeability.number() * MU0);
             if (Util::scene()->problemInfo()->analysisType == AnalysisType_Harmonic)
-                node->values[0][0][i] += 0.25 * (sqr(dudx2[i]) + sqr(dudy2[i])) / (marker->permeability.number * MU0);
+                node->values[0][0][i] += 0.25 * (sqr(dudx2[i]) + sqr(dudy2[i])) / (marker->permeability.number() * MU0);
         }
         else
         {
-            node->values[0][0][i] = 0.25 * (sqr(dudy1[i]) + sqr(dudx1[i] + ((x[i] > 0) ? value1[i] / x[i] : 0.0))) / (marker->permeability.number * MU0);
+            node->values[0][0][i] = 0.25 * (sqr(dudy1[i]) + sqr(dudx1[i] + ((x[i] > 0) ? value1[i] / x[i] : 0.0))) / (marker->permeability.number() * MU0);
             if (Util::scene()->problemInfo()->analysisType == AnalysisType_Harmonic)
-                node->values[0][0][i] += 0.25 * (sqr(dudy2[i]) + sqr(dudx2[i] + ((x > 0) ? value2[i] / x[i] : 0.0))) / (marker->permeability.number * MU0);
+                node->values[0][0][i] += 0.25 * (sqr(dudy2[i]) + sqr(dudx2[i] + ((x > 0) ? value2[i] / x[i] : 0.0))) / (marker->permeability.number() * MU0);
         }
     }
         break;
     case PhysicFieldVariable_RF_Permeability:
     {
         SceneLabelRFMarker *marker = dynamic_cast<SceneLabelRFMarker *>(labelMarker);
-        node->values[0][0][i] = marker->permeability.number;
+        node->values[0][0][i] = marker->permeability.number();
     }
         break;
     case PhysicFieldVariable_RF_Permittivity:
     {
         SceneLabelRFMarker *marker = dynamic_cast<SceneLabelRFMarker *>(labelMarker);
-        node->values[0][0][i] = marker->permittivity.number;
+        node->values[0][0][i] = marker->permittivity.number();
     }
         break;
     case PhysicFieldVariable_RF_Conductivity:
     {
         SceneLabelRFMarker *marker = dynamic_cast<SceneLabelRFMarker *>(labelMarker);
-        node->values[0][0][i] = marker->conductivity.number;
+        node->values[0][0][i] = marker->conductivity.number();
     }
         break;
     case PhysicFieldVariable_RF_J_Ext_real:
     {
         SceneLabelRFMarker *marker = dynamic_cast<SceneLabelRFMarker *>(labelMarker);
-        node->values[0][0][i] = marker->J_ext_real.number;
+        node->values[0][0][i] = marker->J_ext_real.number();
     }
         break;
     case PhysicFieldVariable_RF_J_Ext_imag:
     {
         SceneLabelRFMarker *marker = dynamic_cast<SceneLabelRFMarker *>(labelMarker);
-        node->values[0][0][i] = marker->J_ext_imag.number;
+        node->values[0][0][i] = marker->J_ext_imag.number();
     }
         break;
     default:
@@ -1014,8 +1015,8 @@ QString SceneEdgeRFMarker::script()
     return QString("addboundary(\"%1\", \"%2\", %3, %4)").
             arg(name).
             arg(physicFieldBCToStringKey(type)).
-            arg(value_real.text).
-            arg(value_imag.text);
+            arg(value_real.text()).
+            arg(value_imag.text());
 }
 
 QMap<QString, QString> SceneEdgeRFMarker::data()
@@ -1024,16 +1025,16 @@ QMap<QString, QString> SceneEdgeRFMarker::data()
     switch (type)
     {
     case PhysicFieldBC_RF_ElectricField:
-        out["Electric field - real (V/m)"] = value_real.text;
-        out["Electric field - imag (V/m)"] = value_imag.text;
+        out["Electric field - real (V/m)"] = value_real.text();
+        out["Electric field - imag (V/m)"] = value_imag.text();
         break;
     case PhysicFieldBC_RF_MagneticField:
-        out["Magnetic field - real (A/m)"] = value_real.text;
-        out["Magnetic field - imag (A/m)"] = value_imag.text;
+        out["Magnetic field - real (A/m)"] = value_real.text();
+        out["Magnetic field - imag (A/m)"] = value_imag.text();
         break;
     case PhysicFieldBC_RF_Port:
-        out["Port - power (W)"] = value_real.text;
-        out["Port - phase (deg.)"] = value_imag.text;
+        out["Port - power (W)"] = value_real.text();
+        out["Port - phase (deg.)"] = value_imag.text();
         break;
     }
     return QMap<QString, QString>(out);
@@ -1061,21 +1062,21 @@ QString SceneLabelRFMarker::script()
 {
     return QString("addmaterial(\"%1\", %2, %3, %4)").
             arg(name).
-            arg(permittivity.text).
-            arg(permeability.text).
-            arg(conductivity.text).
-            arg(J_ext_real.text).
-            arg(J_ext_imag.text);
+            arg(permittivity.text()).
+            arg(permeability.text()).
+            arg(conductivity.text()).
+            arg(J_ext_real.text()).
+            arg(J_ext_imag.text());
 }
 
 QMap<QString, QString> SceneLabelRFMarker::data()
 {
     QMap<QString, QString> out;
-    out["Permittivity (-)"] = permittivity.text;
-    out["Permeability (-)"] = permeability.text;
-    out["Conductivity (S/m)"] = conductivity.text;
-    out["J_ext_real (A/m2)"] = J_ext_real.text;
-    out["J_ext_imag (A/m2)"] = J_ext_imag.text;
+    out["Permittivity (-)"] = permittivity.text();
+    out["Permeability (-)"] = permeability.text();
+    out["Conductivity (S/m)"] = conductivity.text();
+    out["J_ext_real (A/m2)"] = J_ext_real.text();
+    out["J_ext_imag (A/m2)"] = J_ext_imag.text();
     return QMap<QString, QString>(out);
 }
 

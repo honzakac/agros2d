@@ -152,11 +152,6 @@ void refineMesh(Mesh *mesh, bool refineGlobal, bool refineTowardsEdge)
                 mesh->refine_towards_boundary(i + 1, Util::scene()->edges[i]->refineTowardsEdge);
 }
 
-SolutionAgros::SolutionAgros(ProgressItemSolve *progressItemSolve)
-{
-    m_progressItemSolve = progressItemSolve;
-}
-
 SolutionArray *solutionArray(Solution *sln, Space *space = NULL, double adaptiveError = 0.0, double adaptiveSteps = 0.0, double time = 0.0)
 {
     SolutionArray *solution = new SolutionArray();
@@ -171,17 +166,7 @@ SolutionArray *solutionArray(Solution *sln, Space *space = NULL, double adaptive
     return solution;
 }
 
-// Initial condition for u.
-double init_cond_u(double x, double y, double& dx, double& dy) {
-  dx = exp(-x*x - y*y) * (-2*x);
-  dy = exp(-x*x - y*y) * (-2*y);
-  return exp(-x*x - y*y);
-}
-
-QList<SolutionArray *> solveSolutioArray(ProgressItemSolve *progressItemSolve,
-                                         Hermes::vector<BCTypes *> bcTypes,
-                                         Hermes::vector<BCValues *> bcValues,
-                                         void (*cbWeakForm)(WeakForm *, Hermes::vector<Solution *>))
+SolutionAgros::SolutionAgros(ProgressItemSolve *progressItemSolve)
 {
     polynomialOrder = Util::scene()->problemInfo()->polynomialOrder;
     adaptivityType = Util::scene()->problemInfo()->adaptivityType;

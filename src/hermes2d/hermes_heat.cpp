@@ -192,7 +192,7 @@ Scalar heat_residual(int n, double *wt, Func<Real> *u_ext[], Func<Real> *v, Geom
         {
             result += wt[i] * (heatLabel[e->elem_marker].thermal_conductivity.value(u_prev->val[i])
                                * (u_prev->dx[i] * v->dx[i] + u_prev->dy[i] * v->dy[i])
-                              - heatLabel[e->elem_marker].volume_heat * v->val[i]);
+                              - heatLabel[e->elem_marker].volume_heat.value(actualTime) * v->val[i]);
         }
 
     return result;
@@ -443,7 +443,6 @@ SceneLabelMarker *HermesHeat::newLabelMarker(PyObject *self, PyObject *args)
 
         return new SceneLabelHeatMarker(name,
                                         TimeFunction(QString::number(volume_heat)),
-                                        Value(QString::number(volume_heat)),
                                         Value(QString(thermal_conductivity_nonlin)),
                                         Value(QString::number(density)),
                                         Value(QString::number(specific_heat)));
@@ -671,7 +670,7 @@ QList<SolutionArray *> HermesHeat::solve(ProgressItemSolve *progressItemSolve)
 
             // if (fabs(labelHeatMarker->volume_heat.timeMax() - Util::scene()->problemInfo()->timeTotal.number) > EPS_ZERO)
             {
-                labelHeatMarker->volume_heat.setTimeMax(Util::scene()->problemInfo()->timeTotal.number);
+                labelHeatMarker->volume_heat.setTimeMax(Util::scene()->problemInfo()->timeTotal.number());
                 labelHeatMarker->volume_heat.fillValues();
             }
             heatLabel[i].volume_heat = labelHeatMarker->volume_heat;
@@ -1042,9 +1041,9 @@ QString SceneLabelHeatMarker::script()
         return QString("addmaterial(\"%1\", \"%2\", %3, %4, %5)").
                 arg(name).
                 arg(volume_heat.function()).
-                arg(thermal_conductivity.text).
-                arg(density.text).
-                arg(specific_heat.text);
+                arg(thermal_conductivity.text()).
+                arg(density.text()).
+                arg(specific_heat.text());
     /*
     if (Util::scene()->problemInfo()->linearityType == LinearityType_Linear)
         return QString("addmaterial(\"%1\", %2, %3, %4, %5)").
@@ -1067,7 +1066,7 @@ QString SceneLabelHeatMarker::script()
 QMap<QString, QString> SceneLabelHeatMarker::data()
 {
     QMap<QString, QString> out;
-    out["Volume heat (W/m3)"] = volume_heat.text();
+    out["Volume heat (W/m3)"] = volume_heat.function();
     out["Thermal conductivity (W/m.K)"] = thermal_conductivity.text();
     out["Density (kg/m3)"] = density.text();
     out["Specific heat (J/kg.K)"] = specific_heat.text();

@@ -39,7 +39,7 @@ TimeFunction::TimeFunction(const QString &function, int count)
     m_count = 0;
 
     Util::scene()->problemInfo()->timeTotal.evaluate(true);
-    setFunction(function, 0.0, Util::scene()->problemInfo()->timeTotal.number, count);
+    setFunction(function, 0.0, Util::scene()->problemInfo()->timeTotal.number(), count);
 }
 
 TimeFunction::~TimeFunction()
