@@ -32,36 +32,38 @@ public:
         // boundary conditions
         for (int i = 0; i<Util::scene()->edges.count(); i++)
         {
-            SceneBoundaryElectrostatic *boundaryHeat = dynamic_cast<SceneBoundaryElectrostatic *>(Util::scene()->edges[i]->boundary);
+            SceneBoundaryElectrostatic *boundary = dynamic_cast<SceneBoundaryElectrostatic *>(Util::scene()->edges[i]->boundary);
 
-            if (boundaryHeat && Util::scene()->edges[i]->boundary != Util::scene()->boundaries[0])
+            if (boundary && Util::scene()->edges[i]->boundary != Util::scene()->boundaries[0])
             {
-                if (boundaryHeat->type == PhysicFieldBC_Electrostatic_SurfaceCharge)
-                    if (fabs(boundaryHeat->value.number) > EPS_ZERO)
-                        add_vector_form_surf(new WeakFormsH1::SurfaceVectorForms::DefaultVectorFormSurf(0,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        boundaryHeat->value.number,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
+                if (boundary->type == PhysicFieldBC_Electrostatic_SurfaceCharge)
+                    if (fabs(boundary->value.number) > EPS_ZERO)
+                        add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    boundary->value.number,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
             }
         }
 
         // materials
         for (int i = 0; i<Util::scene()->labels.count(); i++)
         {
-            SceneMaterialElectrostatic *materialHeat = dynamic_cast<SceneMaterialElectrostatic *>(Util::scene()->labels[i]->material);
+            SceneMaterialElectrostatic *material = dynamic_cast<SceneMaterialElectrostatic *>(Util::scene()->labels[i]->material);
 
-            if (materialHeat && Util::scene()->labels[i]->material != Util::scene()->materials[0])
+            if (material && Util::scene()->labels[i]->material != Util::scene()->materials[0])
             {
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearDiffusion(0, 0,
-                                                                                               QString::number(i).toStdString(),
-                                                                                               materialHeat->permittivity.number * EPS0,
-                                                                                               HERMES_SYM,
-                                                                                               convertProblemType(Util::scene()->problemInfo()->problemType)));
-                if (fabs(materialHeat->charge_density.number) > EPS_ZERO)
-                    add_vector_form(new WeakFormsH1::VolumetricVectorForms::DefaultVectorFormConst(0,
-                                                                                                   QString::number(i).toStdString(),
-                                                                                                   materialHeat->charge_density.number,
-                                                                                                   convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearDiffusion(0, 0,
+                                                           QString::number(i).toStdString(),
+                                                           material->permittivity.number * EPS0,
+                                                           HERMES_SYM,
+                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
+                if (fabs(material->charge_density.number) > EPS_ZERO)
+                    add_vector_form(new WeakFormsH1::DefaultVectorFormVol(0,
+                                                                          QString::number(i).toStdString(),
+                                                                          material->charge_density.number,
+                                                                          NULL,
+                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
             }
         }
     }
@@ -78,8 +80,8 @@ void HermesElectrostatic::readBoundaryFromDomElement(QDomElement *element)
     case PhysicFieldBC_Electrostatic_Potential:
     case PhysicFieldBC_Electrostatic_SurfaceCharge:
         Util::scene()->addBoundary(new SceneBoundaryElectrostatic(element->attribute("name"),
-                                                                      type,
-                                                                      Value(element->attribute("value", "0"))));
+                                                                  type,
+                                                                  Value(element->attribute("value", "0"))));
         break;
     default:
         std::cerr << tr("Boundary type '%1' doesn't exists.").arg(element->attribute("type")).toStdString() << endl;
@@ -98,8 +100,8 @@ void HermesElectrostatic::writeBoundaryToDomElement(QDomElement *element, SceneB
 void HermesElectrostatic::readMaterialFromDomElement(QDomElement *element)
 {
     Util::scene()->addMaterial(new SceneMaterialElectrostatic(element->attribute("name"),
-                                                                    Value(element->attribute("charge_density", "0")),
-                                                                    Value(element->attribute("permittivity", "1"))));
+                                                              Value(element->attribute("charge_density", "0")),
+                                                              Value(element->attribute("permittivity", "1"))));
 }
 
 void HermesElectrostatic::writeMaterialToDomElement(QDomElement *element, SceneMaterial *marker)
@@ -149,8 +151,8 @@ QStringList HermesElectrostatic::volumeIntegralValueHeader()
 SceneBoundary *HermesElectrostatic::newBoundary()
 {
     return new SceneBoundaryElectrostatic(tr("new boundary"),
-                                            PhysicFieldBC_Electrostatic_Potential,
-                                            Value("0"));
+                                          PhysicFieldBC_Electrostatic_Potential,
+                                          Value("0"));
 }
 
 SceneBoundary *HermesElectrostatic::newBoundary(PyObject *self, PyObject *args)
@@ -163,8 +165,8 @@ SceneBoundary *HermesElectrostatic::newBoundary(PyObject *self, PyObject *args)
         if (Util::scene()->getBoundary(name)) return NULL;
 
         return new SceneBoundaryElectrostatic(name,
-                                                physicFieldBCFromStringKey(type),
-                                                Value(QString::number(value)));
+                                              physicFieldBCFromStringKey(type),
+                                              Value(QString::number(value)));
     }
 
     return NULL;
@@ -203,8 +205,8 @@ SceneBoundary *HermesElectrostatic::modifyBoundary(PyObject *self, PyObject *arg
 SceneMaterial *HermesElectrostatic::newMaterial()
 {
     return new SceneMaterialElectrostatic(tr("new material"),
-                                             Value("0"),
-                                             Value("1"));
+                                          Value("0"),
+                                          Value("1"));
 }
 
 SceneMaterial *HermesElectrostatic::newMaterial(PyObject *self, PyObject *args)
@@ -217,8 +219,8 @@ SceneMaterial *HermesElectrostatic::newMaterial(PyObject *self, PyObject *args)
         if (Util::scene()->getMaterial(name)) return NULL;
 
         return new SceneMaterialElectrostatic(name,
-                                                 Value(QString::number(charge_density)),
-                                                 Value(QString::number(permittivity)));
+                                              Value(QString::number(charge_density)),
+                                              Value(QString::number(permittivity)));
     }
 
     return NULL;

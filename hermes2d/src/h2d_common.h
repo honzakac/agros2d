@@ -43,7 +43,7 @@ const int H2D_ORDER_MASK = (1 << H2D_ORDER_BITS) - 1;
 
 /* Uncomment this line to disable internal mesh compatibility
    tests in Traverse:begin(). */
-#define H2D_DISABLE_MULTIMESH_TESTS
+//#define H2D_DISABLE_MULTIMESH_TESTS
 
 class MeshFunction;
 class Solution;
@@ -104,18 +104,15 @@ public:
 
   double get_l2_norm(Vector* vec) const;
 
-  /// New interface, still in developement
-  /// HERMES_API bool solve_newton(scalar* coeff_vec, DiscreteProblem* dp, Solver* solver, SparseMatrix* matrix,
-  ///		                   Vector* rhs, double NEWTON_TOL, int NEWTON_MAX_ITER, bool verbose,
-  ///                              unsigned int stop_condition = NEWTON_WATCH_RESIDUAL);
   bool solve_newton(scalar* coeff_vec, DiscreteProblem* dp, Solver* solver, SparseMatrix* matrix,
-		    Vector* rhs, double NEWTON_TOL, int NEWTON_MAX_ITER, bool verbose = false,
+		    Vector* rhs, bool jacobian_changed = true, double NEWTON_TOL = 1e-8, 
+                    int NEWTON_MAX_ITER = 100, bool verbose = false,
                     bool residual_as_function = false,
                     double damping_coeff = 1.0, double max_allowed_residual_norm = 1e6) const;
 
   bool solve_picard(WeakForm* wf, Space* space, Solution* sln_prev_iter, 
-                    MatrixSolverType matrix_solver, double picard_tol, 
-                    int picard_max_iter, bool verbose) const;
+                    MatrixSolverType matrix_solver, double tol = 1e-8, 
+                    int max_iter = 100, bool verbose = false) const;
 };
 
 #endif

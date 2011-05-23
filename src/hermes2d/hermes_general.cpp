@@ -38,10 +38,11 @@ public:
             {
                 if (boundary->type == PhysicFieldBC_General_Derivative)
                     if (fabs(boundary->value.number) > EPS_ZERO)
-                        add_vector_form_surf(new WeakFormsH1::SurfaceVectorForms::DefaultVectorFormSurf(0,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        boundary->value.number,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    boundary->value.number,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
             }
         }
 
@@ -52,19 +53,19 @@ public:
 
             if (material && Util::scene()->labels[i]->material != Util::scene()->materials[0])
             {
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearDiffusion(0, 0,
-                                                                                               QString::number(i).toStdString(),
-                                                                                               material->constant.number * EPS0,
-                                                                                               HERMES_SYM,
-                                                                                               convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearDiffusion(0, 0,
+                                                           QString::number(i).toStdString(),
+                                                           material->constant.number * EPS0,
+                                                           HERMES_SYM,
+                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
                 if (fabs(material->rightside.number) > EPS_ZERO)
-                    add_vector_form(new WeakFormsH1::VolumetricVectorForms::DefaultVectorFormConst(0,
-                                                                                                   QString::number(i).toStdString(),
-                                                                                                   material->rightside.number,
-                                                                                                   convertProblemType(Util::scene()->problemInfo()->problemType)));
+                    add_vector_form(new WeakFormsH1::DefaultVectorFormVol(0,
+                                                                          QString::number(i).toStdString(),
+                                                                          material->rightside.number,
+                                                                          NULL,
+                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
             }
         }
-
     }
 };
 
@@ -79,8 +80,8 @@ void HermesGeneral::readBoundaryFromDomElement(QDomElement *element)
     case PhysicFieldBC_General_Value:
     case PhysicFieldBC_General_Derivative:
         Util::scene()->addBoundary(new SceneBoundaryGeneral(element->attribute("name"),
-                                                                type,
-                                                                Value(element->attribute("value", "0"))));
+                                                            type,
+                                                            Value(element->attribute("value", "0"))));
         break;
     default:
         std::cerr << tr("Boundary type '%1' doesn't exists.").arg(element->attribute("type")).toStdString() << endl;
@@ -99,8 +100,8 @@ void HermesGeneral::writeBoundaryToDomElement(QDomElement *element, SceneBoundar
 void HermesGeneral::readMaterialFromDomElement(QDomElement *element)
 {
     Util::scene()->addMaterial(new SceneMaterialGeneral(element->attribute("name"),
-                                                              Value(element->attribute("rightside", "0")),
-                                                              Value(element->attribute("constant", "0"))));
+                                                        Value(element->attribute("rightside", "0")),
+                                                        Value(element->attribute("constant", "0"))));
 }
 
 void HermesGeneral::writeMaterialToDomElement(QDomElement *element, SceneMaterial *marker)
@@ -150,8 +151,8 @@ QStringList HermesGeneral::volumeIntegralValueHeader()
 SceneBoundary *HermesGeneral::newBoundary()
 {
     return new SceneBoundaryGeneral(tr("new boundary"),
-                                      PhysicFieldBC_General_Value,
-                                      Value("0"));
+                                    PhysicFieldBC_General_Value,
+                                    Value("0"));
 }
 
 SceneBoundary *HermesGeneral::newBoundary(PyObject *self, PyObject *args)
@@ -164,8 +165,8 @@ SceneBoundary *HermesGeneral::newBoundary(PyObject *self, PyObject *args)
         if (Util::scene()->getBoundary(name)) return NULL;
 
         return new SceneBoundaryGeneral(name,
-                                          physicFieldBCFromStringKey(type),
-                                          Value(QString::number(value)));
+                                        physicFieldBCFromStringKey(type),
+                                        Value(QString::number(value)));
     }
 
     return NULL;
@@ -204,8 +205,8 @@ SceneBoundary *HermesGeneral::modifyBoundary(PyObject *self, PyObject *args)
 SceneMaterial *HermesGeneral::newMaterial()
 {
     return new SceneMaterialGeneral(tr("new material"),
-                                       Value("0"),
-                                       Value("1"));
+                                    Value("0"),
+                                    Value("1"));
 }
 
 SceneMaterial *HermesGeneral::newMaterial(PyObject *self, PyObject *args)
@@ -218,8 +219,8 @@ SceneMaterial *HermesGeneral::newMaterial(PyObject *self, PyObject *args)
         if (Util::scene()->getMaterial(name)) return NULL;
 
         return new SceneMaterialGeneral(name,
-                                           Value(QString::number(rightside)),
-                                           Value(QString::number(constant)));
+                                        Value(QString::number(rightside)),
+                                        Value(QString::number(constant)));
     }
 
     return NULL;

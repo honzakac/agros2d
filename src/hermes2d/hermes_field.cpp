@@ -405,7 +405,7 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<Essential
                 solver = create_linear_solver(matrixSolver, matrix, rhs);
                 // solver->set_factorization_scheme(HERMES_REUSE_FACTORIZATION_COMPLETELY);
 
-                dpTran = new DiscreteProblem(m_wf, space, true);
+                dpTran = new DiscreteProblem(m_wf, space);
             }
 
             int timesteps = (analysisType == AnalysisType_Transient) ? floor(timeTotal/timeStep) : 1;
@@ -511,7 +511,7 @@ bool SolutionAgros::solve(Hermes::vector<Space *> space,
     bool isError = false;
     if (linearityType == LinearityType_Linear)
     {
-        DiscreteProblem dpLin(m_wf, space, true);
+        DiscreteProblem dpLin(m_wf, space);
 
         isError = !solveLinear(&dpLin, space, solution,
                                solver, matrix, rhs);

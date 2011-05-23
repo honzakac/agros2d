@@ -38,10 +38,11 @@ public:
             {
                 if (boundary->type == PhysicFieldBC_Current_InwardCurrentFlow)
                     if (fabs(boundary->value.number) > EPS_ZERO)
-                        add_vector_form_surf(new WeakFormsH1::SurfaceVectorForms::DefaultVectorFormSurf(0,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        boundary->value.number,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    boundary->value.number,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
             }
         }
 
@@ -52,11 +53,11 @@ public:
 
             if (material && Util::scene()->labels[i]->material != Util::scene()->materials[0])
             {
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearDiffusion(0, 0,
-                                                                                               QString::number(i).toStdString(),
-                                                                                               material->conductivity.number,
-                                                                                               HERMES_SYM,
-                                                                                               convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearDiffusion(0, 0,
+                                                           QString::number(i).toStdString(),
+                                                           material->conductivity.number,
+                                                           HERMES_SYM,
+                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
             }
         }
     }

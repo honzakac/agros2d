@@ -88,7 +88,7 @@ enum MatrixSolverType
 
 // Should be in the same order as MatrixSolverTypes above, so that the
 // names may be accessed by the same enumeration variable.
-const std::string MatrixSolverNames[7] = {
+const std::string MatrixSolverNames[6] = {
   "UMFPACK",
   "PETSc",
   "MUMPS",
@@ -138,6 +138,14 @@ enum ProjNormType
   // Used for passing to projecting functions.
   HERMES_UNSET_NORM
 };
+
+// Splines.
+// (In weak forms, NULL spline is translated into a constant spline with value 1.0.)
+#define HERMES_DEFAULT_SPLINE      NULL
+
+// Functions.
+// (In weak forms, NULL function is translated into a constant function with value 1.0.)
+#define HERMES_DEFAULT_FUNCTION    NULL
 
 #ifdef HERMES_COMMON_COMPLEX
 
@@ -421,6 +429,10 @@ const int H2D_DG_INNER_EDGE_INT = -1234567;
 const int H2D_DG_BOUNDARY_EDGE_INT = -12345;
 
 const int HERMES_DIRICHLET_DOF = -1; // Dirichlet lift is a special DOF with number -1.
+
+// For internal use (within Geom<Ord>).
+const int HERMES_DUMMY_ELEM_MARKER = -9999;
+const int HERMES_DUMMY_EDGE_MARKER = -8888;
 
 /// This class makes command line arguments available to any other method in Hermes.
 class HERMES_API CommandLineArgs

@@ -414,7 +414,6 @@ protected:
   friend class HdivSpace;
   friend class DiscreteProblem;
   friend class KellyTypeAdapt;
-  friend class SceneSolution;
 
 public:
   ElementMarkersConversion &get_element_markers_conversion() { return element_markers_conversion; };

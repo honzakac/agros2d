@@ -43,16 +43,18 @@ public:
                     double flux = boundary->heatFlux.number + boundary->h.number * boundary->externalTemperature.number;
 
                     if (fabs(flux) > EPS_ZERO)
-                        add_vector_form_surf(new WeakFormsH1::SurfaceVectorForms::DefaultVectorFormSurf(0,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        flux,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    flux,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                     if (fabs(boundary->h.number) > EPS_ZERO)
-                        add_matrix_form_surf(new WeakFormsH1::SurfaceMatrixForms::DefaultMatrixFormSurf(0, 0,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        boundary->h.number,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_matrix_form_surf(new WeakFormsH1::DefaultMatrixFormSurf(0, 0,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    boundary->h.number,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
                 }
             }
         }
@@ -64,17 +66,18 @@ public:
 
             if (material && Util::scene()->labels[i]->material != Util::scene()->materials[0])
             {
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearDiffusion(0, 0,
-                                                                                               QString::number(i).toStdString(),
-                                                                                               material->thermal_conductivity.number,
-                                                                                               HERMES_SYM,
-                                                                                               convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearDiffusion(0, 0,
+                                                           QString::number(i).toStdString(),
+                                                           material->thermal_conductivity.number,
+                                                           HERMES_SYM,
+                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 if (fabs(material->volume_heat.number) > EPS_ZERO)
-                    add_vector_form(new WeakFormsH1::VolumetricVectorForms::DefaultVectorFormConst(0,
-                                                                                                   QString::number(i).toStdString(),
-                                                                                                   material->volume_heat.number,
-                                                                                                   convertProblemType(Util::scene()->problemInfo()->problemType)));
+                    add_vector_form(new WeakFormsH1::DefaultVectorFormVol(0,
+                                                                          QString::number(i).toStdString(),
+                                                                          material->volume_heat.number,
+                                                                          NULL,
+                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 // transient analysis
                 if (Util::scene()->problemInfo()->analysisType == AnalysisType_Transient)
@@ -83,7 +86,7 @@ public:
                     {
                         if (solution.size() > 0)
                         {
-                            add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearMass(0, 0,
+                            add_matrix_form(new DefaultLinearMass(0, 0,
                                                                                                       QString::number(i).toStdString(),
                                                                                                       material->density.number * material->specific_heat.number / Util::scene()->problemInfo()->timeStep.number,
                                                                                                       HERMES_SYM,

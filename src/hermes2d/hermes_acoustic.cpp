@@ -76,23 +76,26 @@ public:
             {
                 if (boundary->type == PhysicFieldBC_Acoustic_NormalAcceleration)
                     if (fabs(boundary->value_real.number) > EPS_ZERO)
-                        add_vector_form_surf(new WeakFormsH1::SurfaceVectorForms::DefaultVectorFormSurf(0,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        boundary->value_real.number,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    boundary->value_real.number,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 if (boundary->type == PhysicFieldBC_Acoustic_Impedance)
                 {
                     if (fabs(boundary->value_real.number) > EPS_ZERO)
                     {
-                        add_matrix_form_surf(new WeakFormsH1::SurfaceMatrixForms::DefaultMatrixFormSurf(0, 1,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        - 2 * M_PI * Util::scene()->problemInfo()->frequency / boundary->value_real.number,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
-                        add_matrix_form_surf(new WeakFormsH1::SurfaceMatrixForms::DefaultMatrixFormSurf(1, 0,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        2 * M_PI * Util::scene()->problemInfo()->frequency / boundary->value_real.number,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_matrix_form_surf(new WeakFormsH1::DefaultMatrixFormSurf(0, 1,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    - 2 * M_PI * Util::scene()->problemInfo()->frequency / boundary->value_real.number,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_matrix_form_surf(new WeakFormsH1::DefaultMatrixFormSurf(1, 0,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    2 * M_PI * Util::scene()->problemInfo()->frequency / boundary->value_real.number,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
                     }
                 }
 
@@ -118,28 +121,28 @@ public:
             if (material && Util::scene()->labels[i]->material != Util::scene()->materials[0])
             {
                 // real part
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearDiffusion(0, 0,
-                                                                                               QString::number(i).toStdString(),
-                                                                                               1.0 / material->density.number,
-                                                                                               HERMES_SYM,
-                                                                                               convertProblemType(Util::scene()->problemInfo()->problemType)));
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearMass(0, 0,
-                                                                                          QString::number(i).toStdString(),
-                                                                                          - sqr(2 * M_PI * Util::scene()->problemInfo()->frequency) / (material->density.number * sqr(material->speed.number)),
-                                                                                          HERMES_SYM,
-                                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearDiffusion(0, 0,
+                                                           QString::number(i).toStdString(),
+                                                           1.0 / material->density.number,
+                                                           HERMES_SYM,
+                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearMass(0, 0,
+                                                      QString::number(i).toStdString(),
+                                                      - sqr(2 * M_PI * Util::scene()->problemInfo()->frequency) / (material->density.number * sqr(material->speed.number)),
+                                                      HERMES_SYM,
+                                                      convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 // imag part
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearDiffusion(1, 1,
-                                                                                               QString::number(i).toStdString(),
-                                                                                               1.0 / material->density.number,
-                                                                                               HERMES_SYM,
-                                                                                               convertProblemType(Util::scene()->problemInfo()->problemType)));
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearMass(1, 1,
-                                                                                          QString::number(i).toStdString(),
-                                                                                          - sqr(2 * M_PI * Util::scene()->problemInfo()->frequency) / (material->density.number * sqr(material->speed.number)),
-                                                                                          HERMES_SYM,
-                                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearDiffusion(1, 1,
+                                                           QString::number(i).toStdString(),
+                                                           1.0 / material->density.number,
+                                                           HERMES_SYM,
+                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearMass(1, 1,
+                                                      QString::number(i).toStdString(),
+                                                      - sqr(2 * M_PI * Util::scene()->problemInfo()->frequency) / (material->density.number * sqr(material->speed.number)),
+                                                      HERMES_SYM,
+                                                      convertProblemType(Util::scene()->problemInfo()->problemType)));
             }
         }
     }
@@ -166,10 +169,11 @@ public:
             {
                 if (boundary->type == PhysicFieldBC_Acoustic_NormalAcceleration)
                     if (fabs(boundary->value_real.number) > EPS_ZERO)
-                        add_vector_form_surf(new WeakFormsH1::SurfaceVectorForms::DefaultVectorFormSurf(0,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        boundary->value_real.number,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    boundary->value_real.number,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 if (boundary->type == PhysicFieldBC_Acoustic_Impedance)
                 {
@@ -211,29 +215,29 @@ public:
 
             if (material && Util::scene()->labels[i]->material != Util::scene()->materials[0])
             {
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearDiffusion(0, 0,
-                                                                                               QString::number(i).toStdString(),
-                                                                                               1.0 / material->density.number,
-                                                                                               HERMES_NONSYM,
-                                                                                               convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearDiffusion(0, 0,
+                                                           QString::number(i).toStdString(),
+                                                           1.0 / material->density.number,
+                                                           HERMES_NONSYM,
+                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
 
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearMass(0, 1,
-                                                                                          QString::number(i).toStdString(),
-                                                                                          1.0 / (material->density.number * sqr(material->speed.number)) / Util::scene()->problemInfo()->timeStep.number,
-                                                                                          HERMES_NONSYM,
-                                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearMass(0, 1,
+                                                      QString::number(i).toStdString(),
+                                                      1.0 / (material->density.number * sqr(material->speed.number)) / Util::scene()->problemInfo()->timeStep.number,
+                                                      HERMES_NONSYM,
+                                                      convertProblemType(Util::scene()->problemInfo()->problemType)));
 
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearMass(1, 0,
-                                                                                          QString::number(i).toStdString(),
-                                                                                          - 1.0 / Util::scene()->problemInfo()->timeStep.number,
-                                                                                          HERMES_NONSYM,
-                                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearMass(1, 0,
+                                                      QString::number(i).toStdString(),
+                                                      - 1.0 / Util::scene()->problemInfo()->timeStep.number,
+                                                      HERMES_NONSYM,
+                                                      convertProblemType(Util::scene()->problemInfo()->problemType)));
 
-                add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearMass(1, 1,
-                                                                                          QString::number(i).toStdString(),
-                                                                                          1.0,
-                                                                                          HERMES_NONSYM,
-                                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearMass(1, 1,
+                                                      QString::number(i).toStdString(),
+                                                      1.0,
+                                                      HERMES_NONSYM,
+                                                      convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 add_vector_form(new CustomVectorFormTimeDep(0,
                                                             QString::number(i).toStdString(),

@@ -210,6 +210,27 @@ SimpleFilter::SimpleFilter(Hermes::vector<MeshFunction*> solutions, Hermes::vect
 	init_components();
 }
 
+SimpleFilter::SimpleFilter(Hermes::vector<Solution*> solutions, Hermes::vector<int> items)
+{
+  this->num = solutions.size();
+  if(num > 10)
+    error("Attempt to create an instance of Filter with more than 10 MeshFunctions.");
+  if(items.size() != (unsigned) num)
+    if(items.size() > 0)
+      error("Attempt to create an instance of SimpleFilter with different supplied number of MeshFunctions than the number of types of data used from them.");
+    
+    for(int i = 0; i < this->num; i++)
+    {
+      this->sln[i] = solutions.at(i);
+      if(items.size() > 0)
+        this->item[i] = items.at(i);
+      else
+        this->item[i] = H2D_FN_VAL;
+    }
+    this->init();
+    init_components();
+}
+
 void SimpleFilter::init_components()
 {
   bool vec1 = false, vec2 = false;
@@ -289,7 +310,7 @@ scalar SimpleFilter::get_pt_value(double x, double y, int it)
 
 DXDYFilter::DXDYFilter(Hermes::vector<MeshFunction*> solutions) : Filter(solutions)
 {
-	init_components();
+  init_components();
 }
 
 void DXDYFilter::init_components()

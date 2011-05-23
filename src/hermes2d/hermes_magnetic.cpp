@@ -39,16 +39,18 @@ public:
                 if (boundary->type == PhysicFieldBC_Magnetic_SurfaceCurrent)
                 {
                     if (fabs(boundary->value_real.number) > EPS_ZERO)
-                        add_vector_form_surf(new WeakFormsH1::SurfaceVectorForms::DefaultVectorFormSurf(0,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        boundary->value_real.number,
-                                                                                                        HERMES_PLANAR));
+                        add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    boundary->value_real.number,
+                                                                                    NULL,
+                                                                                    HERMES_PLANAR));
                     if (Util::scene()->problemInfo()->analysisType == AnalysisType_Harmonic)
                         if (fabs(boundary->value_imag.number) > EPS_ZERO)
-                            add_vector_form_surf(new WeakFormsH1::SurfaceVectorForms::DefaultVectorFormSurf(0,
-                                                                                                            QString::number(i + 1).toStdString(),
-                                                                                                            boundary->value_imag.number,
-                                                                                                            HERMES_PLANAR));
+                            add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
+                                                                                        QString::number(i + 1).toStdString(),
+                                                                                        boundary->value_imag.number,
+                                                                                        NULL,
+                                                                                        HERMES_PLANAR));
                 }
             }
         }
@@ -61,72 +63,74 @@ public:
             if (material && Util::scene()->labels[i]->material != Util::scene()->materials[0])
             {
                 // steady state and transient analysis
-                add_matrix_form(new WeakFormsMaxwell::VolumetricMatrixForms::DefaultLinearMagnetostatics(0, 0,
-                                                                                                         QString::number(i).toStdString(),
-                                                                                                         1.0 / (material->permeability.number * MU0),
-                                                                                                         HERMES_NONSYM,
-                                                                                                         convertProblemType(Util::scene()->problemInfo()->problemType),
-                                                                                                         (Util::scene()->problemInfo()->problemType == ProblemType_Planar ? 0 : 3)));
+                add_matrix_form(new DefaultLinearMagnetostatics(0, 0,
+                                                                QString::number(i).toStdString(),
+                                                                1.0 / (material->permeability.number * MU0),
+                                                                HERMES_NONSYM,
+                                                                convertProblemType(Util::scene()->problemInfo()->problemType),
+                                                                (Util::scene()->problemInfo()->problemType == ProblemType_Planar ? 0 : 3)));
 
                 // velocity
                 if ((fabs(material->conductivity.number) > EPS_ZERO) &&
                         ((fabs(material->velocity_x.number) > EPS_ZERO) ||
                          (fabs(material->velocity_y.number) > EPS_ZERO) ||
                          (fabs(material->velocity_angular.number) > EPS_ZERO)))
-                    add_matrix_form(new WeakFormsMaxwell::VolumetricMatrixForms::DefaultLinearMagnetostaticsVelocity(0, 0,
-                                                                                                                     QString::number(i).toStdString(),
-                                                                                                                     material->conductivity.number,
-                                                                                                                     material->velocity_x.number,
-                                                                                                                     material->velocity_y.number,
-                                                                                                                     material->velocity_angular.number));
+                    add_matrix_form(new DefaultLinearMagnetostaticsVelocity(0, 0,
+                                                                            QString::number(i).toStdString(),
+                                                                            material->conductivity.number,
+                                                                            material->velocity_x.number,
+                                                                            material->velocity_y.number,
+                                                                            material->velocity_angular.number));
 
                 // external current density
                 if (fabs(material->current_density_real.number) > EPS_ZERO)
-                    add_vector_form(new WeakFormsH1::VolumetricVectorForms::DefaultVectorFormConst(0,
-                                                                                                   QString::number(i).toStdString(),
-                                                                                                   material->current_density_real.number,
-                                                                                                   HERMES_PLANAR));
+                    add_vector_form(new WeakFormsH1::DefaultVectorFormVol(0,
+                                                                          QString::number(i).toStdString(),
+                                                                          material->current_density_real.number,
+                                                                          NULL,
+                                                                          HERMES_PLANAR));
 
                 // remanence
                 if (fabs(material->remanence.number) > EPS_ZERO)
-                    add_vector_form(new WeakFormsMaxwell::VolumetricMatrixForms::DefaultLinearMagnetostaticsRemanence(0,
-                                                                                                                      QString::number(i).toStdString(),
-                                                                                                                      material->permeability.number * MU0,
-                                                                                                                      material->remanence.number,
-                                                                                                                      material->remanence_angle.number,
-                                                                                                                      convertProblemType(Util::scene()->problemInfo()->problemType)));
+                    add_vector_form(new DefaultLinearMagnetostaticsRemanence(0,
+                                                                             QString::number(i).toStdString(),
+                                                                             material->permeability.number * MU0,
+                                                                             material->remanence.number,
+                                                                             material->remanence_angle.number,
+                                                                             convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 // harmonic analysis
                 if (Util::scene()->problemInfo()->analysisType == AnalysisType_Harmonic)
                 {
-                    add_matrix_form(new WeakFormsMaxwell::VolumetricMatrixForms::DefaultLinearMagnetostatics(1, 1,
-                                                                                                             QString::number(i).toStdString(),
-                                                                                                             1.0 / (material->permeability.number * MU0),
-                                                                                                             HERMES_NONSYM,
-                                                                                                             convertProblemType(Util::scene()->problemInfo()->problemType),
-                                                                                                             (Util::scene()->problemInfo()->problemType == ProblemType_Planar ? 0 : 5)));
+                    add_matrix_form(new DefaultLinearMagnetostatics(1, 1,
+                                                                    QString::number(i).toStdString(),
+                                                                    1.0 / (material->permeability.number * MU0),
+                                                                    HERMES_NONSYM,
+                                                                    convertProblemType(Util::scene()->problemInfo()->problemType),
+                                                                    (Util::scene()->problemInfo()->problemType == ProblemType_Planar ? 0 : 5)));
 
                     if (fabs(material->conductivity.number) > EPS_ZERO)
                     {
-                        add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearMass(0, 1,
-                                                                                                  QString::number(i).toStdString(),
-                                                                                                  - 2 * M_PI * Util::scene()->problemInfo()->frequency * material->conductivity.number,
-                                                                                                  HERMES_NONSYM,
-                                                                                                  HERMES_PLANAR));
+                        add_matrix_form(new DefaultLinearMass(0, 1,
+                                                              QString::number(i).toStdString(),
+                                                              - 2 * M_PI * Util::scene()->problemInfo()->frequency * material->conductivity.number,
+                                                              HERMES_NONSYM,
+                                                              HERMES_PLANAR));
 
-                        add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearMass(1, 0,
-                                                                                                  QString::number(i).toStdString(),
-                                                                                                  2 * M_PI * Util::scene()->problemInfo()->frequency * material->conductivity.number,
-                                                                                                  HERMES_NONSYM,
-                                                                                                  HERMES_PLANAR));
+                        add_matrix_form(new DefaultLinearMass(1, 0,
+                                                              QString::number(i).toStdString(),
+                                                              2 * M_PI * Util::scene()->problemInfo()->frequency * material->conductivity.number,
+                                                              HERMES_NONSYM,
+                                                              HERMES_PLANAR));
                     }
 
                     // external current density
                     if (fabs(material->current_density_imag.number) > EPS_ZERO)
-                        add_vector_form(new WeakFormsH1::VolumetricVectorForms::DefaultVectorFormConst(1,
-                                                                                                       QString::number(i).toStdString(),
-                                                                                                       material->current_density_imag.number,
-                                                                                                       HERMES_PLANAR));
+                        add_vector_form(new WeakFormsH1::DefaultVectorFormVol(1,
+                                                                              QString::number(i).toStdString(),
+                                                                              material->current_density_imag.number,
+                                                                              NULL,
+                                                                              HERMES_PLANAR));
                 }
 
                 // transient analysis
@@ -136,11 +140,11 @@ public:
                     {
                         if (solution.size() > 0)
                         {
-                            add_matrix_form(new WeakFormsH1::VolumetricMatrixForms::DefaultLinearMass(0, 0,
-                                                                                                      QString::number(i).toStdString(),
-                                                                                                      material->conductivity.number / Util::scene()->problemInfo()->timeStep.number,
-                                                                                                      HERMES_SYM,
-                                                                                                      convertProblemType(Util::scene()->problemInfo()->problemType)));
+                            add_matrix_form(new DefaultLinearMass(0, 0,
+                                                                  QString::number(i).toStdString(),
+                                                                  material->conductivity.number / Util::scene()->problemInfo()->timeStep.number,
+                                                                  HERMES_SYM,
+                                                                  convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                             add_vector_form(new CustomVectorFormTimeDep(0,
                                                                         QString::number(i).toStdString(),
@@ -892,7 +896,7 @@ void HermesMagnetic::updateTimeFunctions(double time)
 
         material->current_density_real.evaluate(time);
         material->current_density_imag.evaluate(time);
-    }    
+    }
 }
 
 // *************************************************************************************************************************************

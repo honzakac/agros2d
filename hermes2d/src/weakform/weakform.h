@@ -19,6 +19,7 @@
 
 #include "../function/function.h"
 #include "../function/solution.h"
+#include "../definitions.h"
 #include <string>
 
 class RefMap;
@@ -33,22 +34,6 @@ class Shapeset;
 template<typename T> class Func;
 template<typename T> class Geom;
 template<typename T> class ExtData;
-
-// Bilinear form symmetry flag, see WeakForm::add_matrix_form
-enum SymFlag
-{
-  HERMES_ANTISYM = -1,
-  HERMES_NONSYM = 0,
-  HERMES_SYM = 1
-};
-
-// Geometrical type of weak forms.
-enum GeomType
-{
-  HERMES_PLANAR = 0,         // Planar problem.
-  HERMES_AXISYM_X = 1,       // Axisymmetric problem where x-axis is the axis of symmetry.
-  HERMES_AXISYM_Y = 2        // Axisymmetric problem where y-axis is the axis of symmetry.
-};
 
 /// \brief Represents the weak formulation of a PDE problem.
 ///
@@ -79,13 +64,18 @@ public:
   class HERMES_API Form
   {
   public:
+    // One area.
     Form(std::string area = HERMES_ANY, Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+         Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+         double scaling_factor = 1.0, int u_ext_offset = 0);
+    // Multiple areas.
+    Form(Hermes::vector<std::string> areas, Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
          Hermes::vector<scalar> param = Hermes::vector<scalar>(),
          double scaling_factor = 1.0, int u_ext_offset = 0);
 
     inline void set_weakform(WeakForm* wf) { this->wf = wf; }
 
-    std::string area;
+    Hermes::vector<std::string> areas;
     Hermes::vector<MeshFunction *> ext;
     Hermes::vector<scalar> param;
     // Form will be always multiplied (scaled) with this number.
@@ -118,8 +108,15 @@ public:
   class HERMES_API MatrixFormVol : public Form
   {
   public:
-    MatrixFormVol(unsigned int i, unsigned int j, SymFlag sym = HERMES_NONSYM, 
-                  std::string area = HERMES_ANY, 
+    // One area.
+    MatrixFormVol(unsigned int i, unsigned int j, 
+                  std::string area = HERMES_ANY, SymFlag sym = HERMES_NONSYM, 
+                  Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+                  Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+                  double scaling_factor = 1.0, int u_ext_offset = 0);
+    // Multiple areas.
+    MatrixFormVol(unsigned int i, unsigned int j, 
+                  Hermes::vector<std::string> areas, SymFlag sym = HERMES_NONSYM, 
                   Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
                   Hermes::vector<scalar> param = Hermes::vector<scalar>(),
                   double scaling_factor = 1.0, int u_ext_offset = 0);
@@ -138,7 +135,13 @@ public:
   class HERMES_API MatrixFormSurf : public Form
   {
   public:
+    // One area.
     MatrixFormSurf(unsigned int i, unsigned int j, std::string area = HERMES_ANY, 
+                   Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+                   Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+                   double scaling_factor = 1.0, int u_ext_offset = 0);
+    // Multiple areas.
+    MatrixFormSurf(unsigned int i, unsigned int j, Hermes::vector<std::string> areas, 
                    Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
                    Hermes::vector<scalar> param = Hermes::vector<scalar>(),
                    double scaling_factor = 1.0, int u_ext_offset = 0);
@@ -156,7 +159,13 @@ public:
   class HERMES_API VectorFormVol : public Form
   {
   public:
+    // One area.
     VectorFormVol(unsigned int i, std::string area = HERMES_ANY, 
+                  Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+                  Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+                  double scaling_factor = 1.0, int u_ext_offset = 0);
+    // Multiple areas.
+    VectorFormVol(unsigned int i, Hermes::vector<std::string> areas, 
                   Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
                   Hermes::vector<scalar> param = Hermes::vector<scalar>(),
                   double scaling_factor = 1.0, int u_ext_offset = 0);
@@ -174,7 +183,13 @@ public:
   class HERMES_API VectorFormSurf : public Form
   {
   public:
+    // One area.
     VectorFormSurf(unsigned int i, std::string area = HERMES_ANY, 
+                   Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+                   Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+                   double scaling_factor = 1.0, int u_ext_offset = 0);
+    // Multiple areas.
+    VectorFormSurf(unsigned int i, Hermes::vector<std::string> areas, 
                    Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
                    Hermes::vector<scalar> param = Hermes::vector<scalar>(),
                    double scaling_factor = 1.0, int u_ext_offset = 0);
@@ -186,17 +201,31 @@ public:
     virtual scalar value(int n, double *wt, Func<scalar> *u_ext[], Func<double> *v, 
                          Geom<double> *e, ExtData<scalar> *ext) const;
     virtual Ord ord(int n, double *wt, Func<Ord> *u_ext[], Func<Ord> *v, 
-                      Geom<Ord> *e, ExtData<Ord> *ext) const;
+                    Geom<Ord> *e, ExtData<Ord> *ext) const;
   };
 
+  // Multi-component forms.
+  // The principle of functioning of multicomponent forms is as follows.
+  // The form is registered on coordinates in the vector 'coordinates', e.g. {[0,0], [0,1], [2,1]}.
+  // The method 'value' then accepts the parameter 'result', which is a vector with resulting values for
+  // the form on one coordinate. The vectors coordinates and result must have 1-1 relationship, i.e. if the
+  // form is to be registered on three different coordinates, the method value must insert 3 values for these
+  // three coordinates in the same order.
   class HERMES_API MultiComponentMatrixFormVol : public Form
   {
   public:
-    MultiComponentMatrixFormVol(Hermes::vector<std::pair<unsigned int, unsigned int> >coordinates, SymFlag sym = HERMES_NONSYM, 
-                  std::string area = HERMES_ANY, 
-                  Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
-                  Hermes::vector<scalar> param = Hermes::vector<scalar>(),
-                  double scaling_factor = 1.0, int u_ext_offset = 0);
+    // One area.
+    MultiComponentMatrixFormVol(Hermes::vector<std::pair<unsigned int, unsigned int> >coordinates,  
+				std::string area = HERMES_ANY, SymFlag sym = HERMES_NONSYM,
+				Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+				Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+				double scaling_factor = 1.0, int u_ext_offset = 0);
+    // Multiple areas.
+    MultiComponentMatrixFormVol(Hermes::vector<std::pair<unsigned int, unsigned int> >coordinates,  
+				Hermes::vector<std::string> areas, SymFlag sym = HERMES_NONSYM,
+				Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+				Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+				double scaling_factor = 1.0, int u_ext_offset = 0);
 
     virtual MultiComponentMatrixFormVol* clone();
 
@@ -204,7 +233,7 @@ public:
     int sym;
 
     virtual void value(int n, double *wt, Func<scalar> *u_ext[], Func<double> *u, Func<double> *v,
-                         Geom<double> *e, ExtData<scalar> *ext, Hermes::vector<scalar>& result) const = 0;
+                       Geom<double> *e, ExtData<scalar> *ext, Hermes::vector<scalar>& result) const = 0;
     virtual Ord ord(int n, double *wt, Func<Ord> *u_ext[], Func<Ord> *u, Func<Ord> *v,
                     Geom<Ord> *e, ExtData<Ord> *ext) const = 0;
   };
@@ -212,10 +241,18 @@ public:
   class HERMES_API MultiComponentMatrixFormSurf : public Form
   {
   public:
-    MultiComponentMatrixFormSurf(Hermes::vector<std::pair<unsigned int, unsigned int> >coordinates, std::string area = HERMES_ANY, 
-                   Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
-                   Hermes::vector<scalar> param = Hermes::vector<scalar>(),
-                   double scaling_factor = 1.0, int u_ext_offset = 0);
+    // One area.
+    MultiComponentMatrixFormSurf(Hermes::vector<std::pair<unsigned int, unsigned int> >coordinates, 
+				 std::string area = HERMES_ANY, 
+				 Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+				 Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+				 double scaling_factor = 1.0, int u_ext_offset = 0);
+    // Multiple areas.
+    MultiComponentMatrixFormSurf(Hermes::vector<std::pair<unsigned int, unsigned int> >coordinates, 
+				 Hermes::vector<std::string> areas,
+				 Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+				 Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+				 double scaling_factor = 1.0, int u_ext_offset = 0);
 
     virtual MultiComponentMatrixFormSurf* clone();
 
@@ -230,10 +267,18 @@ public:
   class HERMES_API MultiComponentVectorFormVol : public Form
   {
   public:
-    MultiComponentVectorFormVol(Hermes::vector<unsigned int> coordinates, std::string area = HERMES_ANY, 
-                  Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
-                  Hermes::vector<scalar> param = Hermes::vector<scalar>(),
-                  double scaling_factor = 1.0, int u_ext_offset = 0);
+    // One area.
+    MultiComponentVectorFormVol(Hermes::vector<unsigned int> coordinates, 
+				std::string area = HERMES_ANY, 
+				Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+				Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+				double scaling_factor = 1.0, int u_ext_offset = 0);
+    // Multiple areas.
+    MultiComponentVectorFormVol(Hermes::vector<unsigned int> coordinates, 
+				Hermes::vector<std::string> areas,
+				Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+				Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+				double scaling_factor = 1.0, int u_ext_offset = 0);
 
     virtual MultiComponentVectorFormVol* clone();
 
@@ -248,10 +293,18 @@ public:
   class HERMES_API MultiComponentVectorFormSurf : public Form
   {
   public:
-    MultiComponentVectorFormSurf(Hermes::vector<unsigned int> coordinates, std::string area = HERMES_ANY, 
-                   Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
-                   Hermes::vector<scalar> param = Hermes::vector<scalar>(),
-                   double scaling_factor = 1.0, int u_ext_offset = 0);
+    // One area.
+    MultiComponentVectorFormSurf(Hermes::vector<unsigned int> coordinates, 
+				 std::string area = HERMES_ANY, 
+				 Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+				 Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+				 double scaling_factor = 1.0, int u_ext_offset = 0);
+    // Multiple areas.
+    MultiComponentVectorFormSurf(Hermes::vector<unsigned int> coordinates, 
+				 Hermes::vector<std::string> areas,
+				 Hermes::vector<MeshFunction *> ext = Hermes::vector<MeshFunction*>(),
+				 Hermes::vector<scalar> param = Hermes::vector<scalar>(),
+				 double scaling_factor = 1.0, int u_ext_offset = 0);
     
     virtual MultiComponentVectorFormSurf* clone();
 
@@ -367,6 +420,18 @@ public:
 
   bool is_in_area(std::string marker, std::string area) const
   { return area == marker; }
+
+  bool is_in_areas(std::string marker, Hermes::vector<std::string> areas) const
+  { 
+    bool found = false;
+    for (unsigned int i = 0; i < areas.size(); i++) {
+      if (areas[i] == marker) {
+	found = true;
+        break;
+      }
+    }
+    return found;
+  }
 
   bool is_sym() const { return false; /* not impl. yet */ }
 

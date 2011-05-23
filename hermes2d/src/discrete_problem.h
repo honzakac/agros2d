@@ -53,8 +53,8 @@ friend class KellyTypeAdapt;
 
 public:
   /// Constructors.
-  DiscreteProblem(WeakForm* wf, Hermes::vector<Space *> spaces, bool is_linear = false);
-  DiscreteProblem(WeakForm* wf, Space* space, bool is_linear = false);
+  DiscreteProblem(WeakForm* wf, Hermes::vector<Space *> spaces);
+  DiscreteProblem(WeakForm* wf, Space* space);
 
   /// Non-parameterized constructor (currently used only in KellyTypeAdapt to gain access to NeighborSearch methods).
   DiscreteProblem() : wf(NULL), pss(NULL) {num_user_pss = 0; sp_seq = NULL;}
@@ -133,10 +133,10 @@ public:
 		bool force_diagonal_blocks = false, bool add_dir_lift = true, 
                 Table* block_weights = NULL);
 
-  /// Assembling for linear problems. Same as the previous functions, but
-  /// does not need the coeff_vector.
-  void assemble(SparseMatrix* mat, Vector* rhs = NULL, 
-                bool force_diagonal_blocks = false, Table* block_weights = NULL);
+  /// Light version passing NULL for the coefficient vector. External solutions 
+  /// are initialized with zeros.
+  void assemble(SparseMatrix* mat, Vector* rhs = NULL, bool force_diagonal_blocks = false, 
+                bool add_dir_lift = false, Table* block_weights = NULL);
 
   /// Assemble one stage.
   void assemble_one_stage(WeakForm::Stage& stage, 
@@ -212,22 +212,22 @@ public:
   /// Assemble one DG neighbor.
   void assemble_DG_one_neighbor(bool edge_processed, unsigned int neighbor_i, WeakForm::Stage& stage, 
       SparseMatrix* mat, Vector* rhs, bool force_diagonal_blocks, Table* block_weights,
-       Hermes::vector<PrecalcShapeset *>& spss, Hermes::vector<RefMap *>& refmap, Hermes::vector<PrecalcShapeset *>& npss, 
-       Hermes::vector<PrecalcShapeset *>& nspss, Hermes::vector<RefMap *>& nrefmap, LightArray<NeighborSearch*>& neighbor_searches, Hermes::vector<Solution *>& u_ext, 
+       Hermes::vector<PrecalcShapeset *>& spss, Hermes::vector<RefMap *>& refmap, std::map<unsigned int, PrecalcShapeset *> npss,
+       std::map<unsigned int, PrecalcShapeset *> nspss, std::map<unsigned int, RefMap *> nrefmap, LightArray<NeighborSearch*>& neighbor_searches, Hermes::vector<Solution *>& u_ext, 
        Hermes::vector<bool>& isempty, int marker, Hermes::vector<AsmList *>& al, bool bnd, SurfPos& surf_pos, Hermes::vector<bool>& nat, 
        int isurf, Element** e, Element* trav_base, Element* rep_element);
 
   /// Assemble DG matrix forms.
   void assemble_DG_matrix_forms(WeakForm::Stage& stage, 
        SparseMatrix* mat, Vector* rhs, bool force_diagonal_blocks, Table* block_weights,
-       Hermes::vector<PrecalcShapeset *>& spss, Hermes::vector<RefMap *>& refmap, Hermes::vector<PrecalcShapeset *>& npss, 
-       Hermes::vector<PrecalcShapeset *>& nspss, Hermes::vector<RefMap *>& nrefmap, LightArray<NeighborSearch*>& neighbor_searches, Hermes::vector<Solution *>& u_ext, 
+       Hermes::vector<PrecalcShapeset *>& spss, Hermes::vector<RefMap *>& refmap, std::map<unsigned int, PrecalcShapeset *> npss,
+       std::map<unsigned int, PrecalcShapeset *> nspss, std::map<unsigned int, RefMap *> nrefmap, LightArray<NeighborSearch*>& neighbor_searches, Hermes::vector<Solution *>& u_ext, 
        Hermes::vector<bool>& isempty, int marker, Hermes::vector<AsmList *>& al, bool bnd, SurfPos& surf_pos, Hermes::vector<bool>& nat, 
        int isurf, Element** e, Element* trav_base, Element* rep_element);
   void assemble_multicomponent_DG_matrix_forms(WeakForm::Stage& stage, 
        SparseMatrix* mat, Vector* rhs, bool force_diagonal_blocks, Table* block_weights,
-       Hermes::vector<PrecalcShapeset *>& spss, Hermes::vector<RefMap *>& refmap, Hermes::vector<PrecalcShapeset *>& npss, 
-       Hermes::vector<PrecalcShapeset *>& nspss, Hermes::vector<RefMap *>& nrefmap, LightArray<NeighborSearch*>& neighbor_searches, Hermes::vector<Solution *>& u_ext, 
+       Hermes::vector<PrecalcShapeset *>& spss, Hermes::vector<RefMap *>& refmap, std::map<unsigned int, PrecalcShapeset *> npss,
+       std::map<unsigned int, PrecalcShapeset *> nspss, std::map<unsigned int, RefMap *> nrefmap, LightArray<NeighborSearch*>& neighbor_searches, Hermes::vector<Solution *>& u_ext, 
        Hermes::vector<bool>& isempty, int marker, Hermes::vector<AsmList *>& al, bool bnd, SurfPos& surf_pos, Hermes::vector<bool>& nat, 
        int isurf, Element** e, Element* trav_base, Element* rep_element);
 
@@ -667,6 +667,8 @@ protected:
     LightArray<Func<Ord>*> cache_fn_ord;
   };
   AssemblingCaches assembling_caches;
+
+  friend class Hermes2D;
 };
 
 

@@ -4,6 +4,9 @@ void OGProjection::project_internal(Hermes::vector<Space *> spaces, WeakForm* wf
                                     scalar* target_vec, MatrixSolverType matrix_solver)
 {
   _F_
+  // Instantiate a class with global functions.
+  Hermes2D hermes2d;
+
   unsigned int n = spaces.size();
 
   // sanity checks
@@ -15,24 +18,23 @@ void OGProjection::project_internal(Hermes::vector<Space *> spaces, WeakForm* wf
   int ndof = Space::assign_dofs(spaces);
 
   // Initialize DiscreteProblem.
-  bool is_linear = true;
-  DiscreteProblem* dp = new DiscreteProblem(wf, spaces, is_linear);
+  DiscreteProblem* dp = new DiscreteProblem(wf, spaces);
 
   SparseMatrix* matrix = create_matrix(matrix_solver);
   Vector* rhs = create_vector(matrix_solver);
   Solver* solver = create_linear_solver(matrix_solver, matrix, rhs);
 
-  dp->assemble(matrix, rhs, false);
+  // Initial coefficient vector for the Newton's method.  
+  scalar* coeff_vec = new scalar[ndof];
+  memset(coeff_vec, 0, ndof*sizeof(scalar));
 
-  // Calculate the coefficient vector.
-  bool solved = solver->solve();
-  scalar* coeffs = NULL;
-  if (solved)
-    coeffs = solver->get_solution();
+  // Perform Newton's iteration.
+  if (!hermes2d.solve_newton(coeff_vec, dp, solver, matrix, rhs)) error("Newton's iteration failed.");
 
   if (target_vec != NULL)
-    for (int i=0; i<ndof; i++) target_vec[i] = coeffs[i];
+    for (int i=0; i < ndof; i++) target_vec[i] = coeff_vec[i];
 
+  delete [] coeff_vec;
   delete solver;
   delete matrix;
   delete rhs;
@@ -68,14 +70,16 @@ void OGProjection::project_global(Hermes::vector<Space *> spaces, Hermes::vector
     // FIXME - memory leak - create Projection class and encapsulate this function project_global(...)
     // maybe in more general form
     found[i] = 1;
-    proj_wf->add_matrix_form(new ProjectionMatrixVolForm(i, i, norm));
-    proj_wf->add_vector_form(new ProjectionVectorVolForm(i, source_meshfns[i], norm));
+    // Jacobian.
+    proj_wf->add_matrix_form(new ProjectionMatrixFormVol(i, i, norm));
+    // Residual.
+    proj_wf->add_vector_form(new ProjectionVectorFormVol(i, source_meshfns[i], norm));
   }
   for (int i=0; i < n; i++)
   {
     if (found[i] == 0)
     {
-      warn("index of component: %d\n", i);
+      warn("Index of component: %d\n", i);
       error("Wrong projection norm in project_global().");
     }
   }

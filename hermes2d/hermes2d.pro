@@ -74,6 +74,7 @@ SOURCES +=  ../hermes_common/compat/fmemopen.cpp \
             src/function/norm.cpp \
             src/function/forms.cpp \
             src/function/solution.cpp \
+            src/function/spline.cpp \
             src/gen/gen_hc_gradeigen.cpp \
             src/gen/gen_hc_gradleg.cpp \
             src/gen/gen_hc_gradleg_triang.cpp \
@@ -135,7 +136,13 @@ SOURCES +=  ../hermes_common/compat/fmemopen.cpp \
             src/views/view.cpp \
             src/views/view_data.cpp \
             src/views/view_support.cpp \
-            src/weakform/weakform.cpp
+            src/weakform/weakform.cpp \
+            src/weakform_library/weakforms_elasticity.cpp \
+            # src/weakform_library/weakforms_hcurl.cpp \
+            src/weakform_library/weakforms_h1.cpp \
+            src/weakform_library/weakforms_maxwell.cpp
+            # weakforms_neutronics.cpp
+
 
 HEADERS = += ../hermes_common/src/compat.h
 

@@ -39,19 +39,21 @@ public:
                 if (boundary->typeX == PhysicFieldBC_Elasticity_Free)
                 {
                     if (fabs(boundary->forceX.number) > EPS_ZERO)
-                        add_vector_form_surf(new WeakFormsH1::SurfaceVectorForms::DefaultVectorFormSurf(0,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        boundary->forceX.number,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    boundary->forceX.number,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 }
                 if (boundary->typeY == PhysicFieldBC_Elasticity_Free)
                 {
                     if (fabs(boundary->forceY.number) > EPS_ZERO)
-                        add_vector_form_surf(new WeakFormsH1::SurfaceVectorForms::DefaultVectorFormSurf(1,
-                                                                                                        QString::number(i + 1).toStdString(),
-                                                                                                        boundary->forceY.number,
-                                                                                                        convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(1,
+                                                                                    QString::number(i + 1).toStdString(),
+                                                                                    boundary->forceY.number,
+                                                                                    NULL,
+                                                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
                 }
             }
         }
@@ -63,48 +65,50 @@ public:
 
             if (material && Util::scene()->labels[i]->material != Util::scene()->materials[0])
             {
-                add_matrix_form(new WeakFormsElasticity::VolumetricMatrixForms::DefaultLinearXX(0, 0,
-                                                                                                QString::number(i).toStdString(),
-                                                                                                material->lambda(), material->mu(),
-                                                                                                convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearXX(0, 0,
+                                                    QString::number(i).toStdString(),
+                                                    material->lambda(), material->mu(),
+                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
 
-                add_matrix_form(new WeakFormsElasticity::VolumetricMatrixForms::DefaultLinearXY(0, 1,
-                                                                                                QString::number(i).toStdString(),
-                                                                                                material->lambda(), material->mu(),
-                                                                                                convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearXY(0, 1,
+                                                    QString::number(i).toStdString(),
+                                                    material->lambda(), material->mu(),
+                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
 
-                add_matrix_form(new WeakFormsElasticity::VolumetricMatrixForms::DefaultLinearYY(1, 1,
-                                                                                                QString::number(i).toStdString(),
-                                                                                                material->lambda(), material->mu(),
-                                                                                                convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new DefaultLinearYY(1, 1,
+                                                    QString::number(i).toStdString(),
+                                                    material->lambda(), material->mu(),
+                                                    convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 // inner forces
                 if (fabs(material->forceX.number) > EPS_ZERO)
-                    add_vector_form(new WeakFormsH1::VolumetricVectorForms::DefaultVectorFormConst(0,
-                                                                                                   QString::number(i).toStdString(),
-                                                                                                   material->forceX.number,
-                                                                                                   convertProblemType(Util::scene()->problemInfo()->problemType)));
+                    add_vector_form(new WeakFormsH1::DefaultVectorFormVol(0,
+                                                                          QString::number(i).toStdString(),
+                                                                          material->forceX.number,
+                                                                          NULL,
+                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
                 if (fabs(material->forceY.number) > EPS_ZERO)
-                    add_vector_form(new WeakFormsH1::VolumetricVectorForms::DefaultVectorFormConst(1,
-                                                                                                   QString::number(i).toStdString(),
-                                                                                                   material->forceY.number,
-                                                                                                   convertProblemType(Util::scene()->problemInfo()->problemType)));
+                    add_vector_form(new WeakFormsH1::DefaultVectorFormVol(1,
+                                                                          QString::number(i).toStdString(),
+                                                                          material->forceY.number,
+                                                                          NULL,
+                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 // thermoelasticity
                 if ((fabs(material->alpha.number) > EPS_ZERO) &&
                         (fabs(material->temp.number - material->temp_ref.number) > EPS_ZERO))
                     add_vector_form(new DefaultLinearThermoelasticityX(0, 0,
-                                                                      QString::number(i).toStdString(),
-                                                                      material->lambda(), material->mu(),
-                                                                      material->alpha.number, material->temp.number, material->temp_ref.number,
-                                                                      convertProblemType(Util::scene()->problemInfo()->problemType)));
+                                                                       QString::number(i).toStdString(),
+                                                                       material->lambda(), material->mu(),
+                                                                       material->alpha.number, material->temp.number, material->temp_ref.number,
+                                                                       convertProblemType(Util::scene()->problemInfo()->problemType)));
                 if ((fabs(material->alpha.number) > EPS_ZERO) &&
                         (fabs(material->temp.number - material->temp_ref.number) > EPS_ZERO))
                     add_vector_form(new DefaultLinearThermoelasticityY(1,
-                                                                      QString::number(i).toStdString(),
-                                                                      material->lambda(), material->mu(),
-                                                                      material->alpha.number, material->temp.number, material->temp_ref.number,
-                                                                      convertProblemType(Util::scene()->problemInfo()->problemType)));
+                                                                       QString::number(i).toStdString(),
+                                                                       material->lambda(), material->mu(),
+                                                                       material->alpha.number, material->temp.number, material->temp_ref.number,
+                                                                       convertProblemType(Util::scene()->problemInfo()->problemType)));
             }
         }
     }
@@ -202,7 +206,7 @@ public:
         }
 
         // This is to make the form usable in rk_time_step().
-       virtual WeakForm::VectorFormVol* clone() {
+        virtual WeakForm::VectorFormVol* clone() {
             return new DefaultLinearThermoelasticityY(*this);
         }
 

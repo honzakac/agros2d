@@ -38,7 +38,7 @@ public:
 
   void init(Hermes::vector<MeshFunction*> solutions);
 
-	virtual void set_quad_2d(Quad2D* quad_2d);
+  virtual void set_quad_2d(Quad2D* quad_2d);
   virtual void set_active_element(Element* e);
   virtual void free();
   virtual void reinit();
@@ -93,6 +93,7 @@ public:
   SimpleFilter() {};
 
   SimpleFilter(Hermes::vector<MeshFunction*> solutions, Hermes::vector<int> items = *(new Hermes::vector<int>));
+  SimpleFilter(Hermes::vector<Solution*> solutions, Hermes::vector<int> items = *(new Hermes::vector<int>));
 
   virtual scalar get_pt_value(double x, double y, int item = H2D_FN_VAL_0);
 
@@ -116,7 +117,7 @@ class HERMES_API DXDYFilter : public Filter
 {
 public:
   // one result (rslt), all inputs and result including derivatives
-	DXDYFilter() {};
+  DXDYFilter() {};
   DXDYFilter(Hermes::vector<MeshFunction*> solutions);
 
   void init(Hermes::vector<MeshFunction*> solutions);
