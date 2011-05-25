@@ -28,6 +28,7 @@
 #include "weakform_library/weakforms_h1.h"
 #include "weakform_library/weakforms_maxwell.h"
 #include "weakform_library/weakforms_elasticity.h"
+#include "agros_forms.h"
 
 #include "scene.h"
 #include "scenebasic.h"

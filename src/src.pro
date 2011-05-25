@@ -127,7 +127,8 @@ HEADERS += util.h \
     postprocessorview.h \
     style/stylehelper.h \
     style/styleanimator.h \
-    style/manhattanstyle.h
+    style/manhattanstyle.h \
+    hermes2d/agros_forms.h
 INCLUDEPATH += . \
     dxflib \
     ../hermes_common
