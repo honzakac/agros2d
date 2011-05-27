@@ -42,14 +42,12 @@ public:
                     if (fabs(boundary->value_imag.number) > EPS_ZERO)
                         add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
                                                                                     QString::number(i + 1).toStdString(),
-                                                                                    - 2 * M_PI * Util::scene()->problemInfo()->frequency * boundary->value_imag.number,
-                                                                                    NULL,
+                                                                                    new HermesFunction(- 2 * M_PI * Util::scene()->problemInfo()->frequency * boundary->value_imag.number),
                                                                                     HERMES_PLANAR));
                     if (fabs(boundary->value_real.number) > EPS_ZERO)
                         add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(1,
                                                                                     QString::number(i + 1).toStdString(),
-                                                                                    2 * M_PI * Util::scene()->problemInfo()->frequency * boundary->value_real.number,
-                                                                                    NULL,
+                                                                                    new HermesFunction(2 * M_PI * Util::scene()->problemInfo()->frequency * boundary->value_real.number),
                                                                                     HERMES_PLANAR));
                 }
 
@@ -155,15 +153,13 @@ public:
                 if (fabs(material->current_density_imag.number) > EPS_ZERO)
                     add_vector_form(new WeakFormsH1::DefaultVectorFormVol(0,
                                                                           QString::number(i).toStdString(),
-                                                                          2 * M_PI * Util::scene()->problemInfo()->frequency * material->current_density_imag.number,
-                                                                          NULL,
+                                                                          new HermesFunction(2 * M_PI * Util::scene()->problemInfo()->frequency * material->current_density_imag.number),
                                                                           HERMES_PLANAR));
 
                 if (fabs(material->current_density_real.number) > EPS_ZERO)
                     add_vector_form(new WeakFormsH1::DefaultVectorFormVol(1,
                                                                           QString::number(i).toStdString(),
-                                                                          - 2 * M_PI * Util::scene()->problemInfo()->frequency * material->current_density_real.number,
-                                                                          NULL,
+                                                                          new HermesFunction(- 2 * M_PI * Util::scene()->problemInfo()->frequency * material->current_density_real.number),
                                                                           HERMES_PLANAR));
             }
         }

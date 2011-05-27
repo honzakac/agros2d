@@ -45,16 +45,20 @@ public:
                     if (fabs(flux) > EPS_ZERO)
                         add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
                                                                                     QString::number(i + 1).toStdString(),
-                                                                                    flux,
-                                                                                    NULL,
+                                                                                    new HermesFunction(- flux),
                                                                                     convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                     if (fabs(boundary->h.number) > EPS_ZERO)
+                    {
                         add_matrix_form_surf(new WeakFormsH1::DefaultMatrixFormSurf(0, 0,
                                                                                     QString::number(i + 1).toStdString(),
-                                                                                    boundary->h.number,
-                                                                                    NULL,
+                                                                                    new HermesFunction(boundary->h.number),
                                                                                     convertProblemType(Util::scene()->problemInfo()->problemType)));
+                        add_vector_form_surf(new WeakFormsH1::DefaultResidualSurf(0,
+                                                                                  QString::number(i + 1).toStdString(),
+                                                                                  new HermesFunction(boundary->h.number),
+                                                                                  convertProblemType(Util::scene()->problemInfo()->problemType)));
+                    }
                 }
             }
         }
@@ -66,17 +70,23 @@ public:
 
             if (material && Util::scene()->labels[i]->material != Util::scene()->materials[0])
             {
-                add_matrix_form(new DefaultLinearDiffusion(0, 0,
-                                                           QString::number(i).toStdString(),
-                                                           material->thermal_conductivity.number,
-                                                           HERMES_SYM,
-                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
+                {
+                    add_matrix_form(new WeakFormsH1::DefaultJacobianDiffusion(0, 0,
+                                                                              QString::number(i).toStdString(),
+                                                                              new HermesFunction(material->thermal_conductivity.number),
+                                                                              HERMES_NONSYM,
+                                                                              convertProblemType(Util::scene()->problemInfo()->problemType)));
+
+                    add_vector_form(new WeakFormsH1::DefaultResidualDiffusion(0,
+                                                                              QString::number(i).toStdString(),
+                                                                              new HermesFunction(material->thermal_conductivity.number),
+                                                                              convertProblemType(Util::scene()->problemInfo()->problemType)));
+                }
 
                 if (fabs(material->volume_heat.number) > EPS_ZERO)
                     add_vector_form(new WeakFormsH1::DefaultVectorFormVol(0,
                                                                           QString::number(i).toStdString(),
-                                                                          material->volume_heat.number,
-                                                                          NULL,
+                                                                          new HermesFunction(- material->volume_heat.number),
                                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 // transient analysis
@@ -86,15 +96,20 @@ public:
                     {
                         if (solution.size() > 0)
                         {
-                            add_matrix_form(new DefaultLinearMass(0, 0,
-                                                                                                      QString::number(i).toStdString(),
-                                                                                                      material->density.number * material->specific_heat.number / Util::scene()->problemInfo()->timeStep.number,
-                                                                                                      HERMES_SYM,
-                                                                                                      convertProblemType(Util::scene()->problemInfo()->problemType)));
+                            add_matrix_form(new WeakFormsH1::DefaultMatrixFormVol(0, 0,
+                                                                  QString::number(i).toStdString(),
+                                                                  new HermesFunction(material->density.number * material->specific_heat.number / Util::scene()->problemInfo()->timeStep.number),
+                                                                  HERMES_NONSYM,
+                                                                  convertProblemType(Util::scene()->problemInfo()->problemType)));
+
+                            add_vector_form(new WeakFormsH1::DefaultResidualVol(0,
+                                                                                QString::number(i).toStdString(),
+                                                                                new HermesFunction(material->density.number * material->specific_heat.number / Util::scene()->problemInfo()->timeStep.number),
+                                                                                convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                             add_vector_form(new CustomVectorFormTimeDep(0,
                                                                         QString::number(i).toStdString(),
-                                                                        material->density.number * material->specific_heat.number / Util::scene()->problemInfo()->timeStep.number,
+                                                                        - material->density.number * material->specific_heat.number / Util::scene()->problemInfo()->timeStep.number,
                                                                         solution[0],
                                                                         convertProblemType(Util::scene()->problemInfo()->problemType)));
                         }

@@ -240,11 +240,11 @@ void ProgressItemMesh::meshTriangleCreated(int exitCode)
             }
 
             //  remove triangle temp files
-            // QFile::remove(tempProblemFileName() + ".poly");
-            // QFile::remove(tempProblemFileName() + ".node");
-            // QFile::remove(tempProblemFileName() + ".edge");
-            // QFile::remove(tempProblemFileName() + ".ele");
-            // QFile::remove(tempProblemFileName() + ".neigh");
+            QFile::remove(tempProblemFileName() + ".poly");
+            QFile::remove(tempProblemFileName() + ".node");
+            QFile::remove(tempProblemFileName() + ".edge");
+            QFile::remove(tempProblemFileName() + ".ele");
+            QFile::remove(tempProblemFileName() + ".neigh");
             QFile::remove(tempProblemFileName() + ".triangle.out");
             QFile::remove(tempProblemFileName() + ".triangle.err");
             emit message(tr("Mesh files were deleted"), false, 4);
@@ -988,6 +988,7 @@ void ProgressItemSolve::solve()
     }
     else
     {
+        m_isError = true;
         emit message(tr("Problem was not solved"), true, 0);
         Util::scene()->sceneSolution()->setTimeElapsed(0);
     }

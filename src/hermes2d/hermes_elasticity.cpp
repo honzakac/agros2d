@@ -41,8 +41,7 @@ public:
                     if (fabs(boundary->forceX.number) > EPS_ZERO)
                         add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
                                                                                     QString::number(i + 1).toStdString(),
-                                                                                    boundary->forceX.number,
-                                                                                    NULL,
+                                                                                    new HermesFunction(boundary->forceX.number),
                                                                                     convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 }
@@ -51,8 +50,7 @@ public:
                     if (fabs(boundary->forceY.number) > EPS_ZERO)
                         add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(1,
                                                                                     QString::number(i + 1).toStdString(),
-                                                                                    boundary->forceY.number,
-                                                                                    NULL,
+                                                                                    new HermesFunction(boundary->forceY.number),
                                                                                     convertProblemType(Util::scene()->problemInfo()->problemType)));
                 }
             }
@@ -84,14 +82,12 @@ public:
                 if (fabs(material->forceX.number) > EPS_ZERO)
                     add_vector_form(new WeakFormsH1::DefaultVectorFormVol(0,
                                                                           QString::number(i).toStdString(),
-                                                                          material->forceX.number,
-                                                                          NULL,
+                                                                          new HermesFunction(material->forceX.number),
                                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
                 if (fabs(material->forceY.number) > EPS_ZERO)
                     add_vector_form(new WeakFormsH1::DefaultVectorFormVol(1,
                                                                           QString::number(i).toStdString(),
-                                                                          material->forceY.number,
-                                                                          NULL,
+                                                                          new HermesFunction(material->forceY.number),
                                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
 
                 // thermoelasticity

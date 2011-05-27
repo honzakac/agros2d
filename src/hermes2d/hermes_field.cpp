@@ -32,6 +32,30 @@
 
 #include "mesh/h2d_reader.h"
 
+class CustomInitialCondition : public ExactSolutionScalar
+{
+public:
+    CustomInitialCondition(Mesh* mesh) : ExactSolutionScalar(mesh)
+    {
+    };
+
+    virtual void derivatives (double x, double y, scalar& dx, scalar& dy) const
+    {
+        dx = 0.0;
+        dy = 0.0;
+    };
+
+    virtual scalar value (double x, double y) const
+    {
+        return 0.0;
+    };
+
+    virtual Ord ord(Ord x, Ord y) const
+    {
+        return Ord(1);
+    }
+};
+
 double actualTime;
 
 HermesField *hermesFieldFactory(PhysicField physicField)
@@ -212,7 +236,7 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<Essential
     Hermes::vector<RefinementSelectors::Selector *> selector;
 
     // error marker
-    bool isError = false;
+    isError = false;
 
     RefinementSelectors::Selector *select = NULL;
     switch (adaptivityType)
@@ -281,12 +305,12 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<Essential
         actualTime = 0.0;
 
         // update time function
-        Util::scene()->problemInfo()->hermes()->updateTimeFunctions(actualTime);
+        // Util::scene()->problemInfo()->hermes()->updateTimeFunctions(actualTime);
 
-        m_wf->set_current_time(actualTime);
-        m_wf->solution = solution;
-        m_wf->delete_all();
-        m_wf->registerForms();
+        // m_wf->set_current_time(actualTime);
+        // m_wf->solution = solution;
+        // m_wf->delete_all();
+        // m_wf->registerForms();
 
         // emit message
         if (adaptivityType != AdaptivityType_None)
@@ -295,6 +319,7 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<Essential
         double error = 0.0;
 
         // solution
+        /*
         int maxAdaptivitySteps = (adaptivityType == AdaptivityType_None) ? 1 : adaptivitySteps;
         int actualAdaptivitySteps = -1;
         for (int i = 0; i<maxAdaptivitySteps; i++)
@@ -383,30 +408,25 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<Essential
             delete matrix;
             delete rhs;
         }
+        */
 
-        // delete selector
-        if (select) delete select;
-        selector.clear();
+        int maxAdaptivitySteps = (adaptivityType == AdaptivityType_None) ? 1 : adaptivitySteps;
+        int actualAdaptivitySteps = -1;
 
         // timesteps
-        if (!isError)
+        // if (!isError)
         {
-            SparseMatrix *matrix = NULL;
-            Vector *rhs = NULL;
-            Solver *solver = NULL;
+            // set up the solver, matrix, and rhs according to the solver selection.
+            SparseMatrix *matrix = create_matrix(matrixSolver);
+            Vector *rhs = create_vector(matrixSolver);
+            Solver *solver = create_linear_solver(matrixSolver, matrix, rhs);
 
             // allocate dp for transient solution
-            DiscreteProblem *dpTran = NULL;
-            if (analysisType == AnalysisType_Transient)
-            {
-                // set up the solver, matrix, and rhs according to the solver selection.
-                matrix = create_matrix(matrixSolver);
-                rhs = create_vector(matrixSolver);
-                solver = create_linear_solver(matrixSolver, matrix, rhs);
-                // solver->set_factorization_scheme(HERMES_REUSE_FACTORIZATION_COMPLETELY);
-
-                dpTran = new DiscreteProblem(m_wf, space);
-            }
+            // DiscreteProblem *dpTran = NULL;
+            // if (analysisType == AnalysisType_Transient)
+            // {
+            // dpTran = new DiscreteProblem(m_wf, space);
+            // }
 
             int timesteps = (analysisType == AnalysisType_Transient) ? floor(timeTotal/timeStep) : 1;
             for (int n = 0; n<timesteps; n++)
@@ -420,28 +440,30 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<Essential
                 Util::scene()->problemInfo()->hermes()->updateTimeFunctions(actualTime);
 
                 m_wf->set_current_time(actualTime);
+                m_wf->solution = solution;
                 m_wf->delete_all();
                 m_wf->registerForms();
 
-                // transient
-                if ((timesteps > 1) && (linearityType == LinearityType_Linear))
-                    isError = !solveLinear(dpTran, space, solution,
-                                           solver, matrix, rhs);
-                if ((timesteps > 1) && (linearityType != LinearityType_Linear))
-                    isError = !solve(space, solution,
-                                     solver, matrix, rhs);
+                // solve system
+                solve(space, solution, solver, matrix, rhs);
 
                 // output
-                for (int i = 0; i < numberOfSolution; i++)
+                if (!isError)
                 {
-                    solutionArrayList.append(solutionArray(solution.at(i), space.at(i), error, actualAdaptivitySteps, (n+1)*timeStep));
+                    for (int i = 0; i < numberOfSolution; i++)
+                        solutionArrayList.append(solutionArray(solution.at(i), space.at(i), error, actualAdaptivitySteps, (n+1)*timeStep));
+
+                    if (analysisType == AnalysisType_Transient)
+                        m_progressItemSolve->emitMessage(QObject::tr("Transient time step (%1/%2): %3 s").
+                                                         arg(n+1).
+                                                         arg(timesteps).
+                                                         arg(actualTime, 0, 'e', 2), false, n+2);
+                }
+                else
+                {
+                    break;
                 }
 
-                if (analysisType == AnalysisType_Transient)
-                    m_progressItemSolve->emitMessage(QObject::tr("Transient time step (%1/%2): %3 s").
-                                                     arg(n+1).
-                                                     arg(timesteps).
-                                                     arg(actualTime, 0, 'e', 2), false, n+2);
                 if (m_progressItemSolve->isCanceled())
                 {
                     isError = true;
@@ -454,9 +476,14 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<Essential
             if (matrix) delete matrix;
             if (rhs) delete rhs;
 
-            if (dpTran) delete dpTran;
+            // if (dpTran) delete dpTran;
         }
     }
+
+    // delete selector
+    if (select) delete select;
+    selector.clear();
+
     // delete mesh
     delete mesh;
 
@@ -482,169 +509,116 @@ QList<SolutionArray *> SolutionAgros::solveSolutioArray(Hermes::vector<Essential
     return solutionArrayList;
 }
 
-bool SolutionAgros::solveLinear(DiscreteProblem *dp,
-                                Hermes::vector<Space *> space,
-                                Hermes::vector<Solution *> solution,
-                                Solver *solver, SparseMatrix *matrix, Vector *rhs)
-{
-    // QTime time;
-    // time.start();
-    dp->assemble(matrix, rhs);
-    // qDebug() << "assemble: " << time.elapsed();
-
-    if(solver->solve())
-    {
-        Solution::vector_to_solutions(solver->get_solution(), space, solution);
-        return true;
-    }
-    else
-    {
-        m_progressItemSolve->emitMessage(QObject::tr("Matrix solver failed."), true, 1);
-        return false;
-    }
-}
-
 bool SolutionAgros::solve(Hermes::vector<Space *> space,
                           Hermes::vector<Solution *> solution,
                           Solver *solver, SparseMatrix *matrix, Vector *rhs)
 {
-    bool isError = false;
-    if (linearityType == LinearityType_Linear)
+    Hermes2D hermes2d;
+
+    DiscreteProblem dp(m_wf, space);
+
+    scalar *coeff_vec = new scalar[Space::get_num_dofs(space)];
+    memset(coeff_vec, 0, Space::get_num_dofs(space)*sizeof(scalar));
+    // CustomInitialCondition init_sln(mesh);
+    // OGProjection::project_global(space, solution, &init_sln, coeff_vec);
+
+    // Perform Newton's iteration.
+    bool jacobian_changed = true;
+    bool residual_as_function = false;
+    double damping_coeff = 1.0;
+    double max_allowed_residual_norm = 1e12;
+
+    // Prepare solutions for measuring residual norm.
+    int num_spaces = dp.get_spaces().size();
+    Hermes::vector<Solution*> solutions;
+    Hermes::vector<bool> dir_lift_false;
+    for (int i=0; i < num_spaces; i++)
     {
-        DiscreteProblem dpLin(m_wf, space);
+        if (residual_as_function)
+            solutions.push_back(new Solution());
 
-        isError = !solveLinear(&dpLin, space, solution,
-                               solver, matrix, rhs);
-
-        return !isError;
+        // No Dirichlet lifts will be considered.
+        dir_lift_false.push_back(false);
     }
 
-    if (linearityType == LinearityType_Picard)
+    // The Newton's loop.
+    double residual_norm;
+    int it = 1;
+    while (1)
     {
-        /*
-        DiscreteProblem dpNonlinPicard(m_wf, space, true);
+        // Obtain the number of degrees of freedom.
+        int ndof = dp.get_num_dofs();
 
-        // create Picard solution
-        Hermes::vector<Solution *> solutionPicard;
-        for (int i = 0; i < numberOfSolution; i++)
-            solutionPicard.push_back(new Solution());
+        // Assemble the residual vector.
+        dp.assemble(coeff_vec, NULL, rhs); // NULL = we do not want the Jacobian.
 
-        // perform the Picard's iteration
-        for (int i = 0; i < linearityNonlinearSteps; i++)
+        // Calculate the l2-norm of residual vector, this is the traditional way.
+        residual_norm = hermes2d.get_l2_norm(rhs);
+
+        // Info for the user.
+        if (it == 1)
+            m_progressItemSolve->emitMessage(QObject::tr("Newton initial residual norm: %1").
+                                             arg(residual_norm, 0, 'f', 5), false, 1);
+        else
+            m_progressItemSolve->emitMessage(QObject::tr("Newton iter %1, residual norm: %2").
+                                             arg(it-1).
+                                             arg(residual_norm, 0, 'f', 5), false, 1);
+
+        // If maximum allowed residual norm is exceeded, fail.
+        if (residual_norm > max_allowed_residual_norm)
         {
-            isError = !solveLinear(&dpNonlinPicard, space, solutionPicard,
-                                   solver, matrix, rhs, false);
+            m_progressItemSolve->emitMessage(QObject::tr("Current residual norm: %1").
+                                             arg(residual_norm, 0, 'f', 5), false, 1);
+            m_progressItemSolve->emitMessage(QObject::tr("Maximum allowed residual norm: %1").
+                                             arg(max_allowed_residual_norm, 0, 'f', 5), false, 1);
+            m_progressItemSolve->emitMessage(QObject::tr("Newton solve not successful."), true, 1);
 
-            ProjNormType projNormTypeTMP = HERMES_H1_NORM;
-            // ProjNormType projNormTypeTMP = HERMES_L2_NORM;
-
-            // calc error
-            double *val_sol, *val_solpic, *val_diff;
-            double error = 0.0;
-            for (int i = 0; i < numberOfSolution; i++)
-            {
-                error += calc_abs_error(solution.at(i), solutionPicard.at(i), projNormTypeTMP) * 100.0
-                        / calc_norm(&sln_new, HERMES_H1_NORM) * 100;
-
-                val_sol = solution.at(i)->get_fn_values();
-                val_solpic = solutionPicard.at(i)->get_fn_values();
-
-                val_diff = new double[Space::get_num_dofs(space)];
-                for (int j = 0; j < Space::get_num_dofs(space); j++)
-                    val_diff[j] = val_solpic[j]; //  + 0.5 * (val_sol[j] - val_solpic[j]);
-            }
-
-            // emit signal
-            m_progressItemSolve->emitMessage(QObject::tr("Picards method rel. error (%2/%3): %1%").
-                                             arg(error, 0, 'f', 5).
-                                             arg(i + 1).
-                                             arg(linearityNonlinearSteps), false, 1);
-
-            // add error to the list
-            m_progressItemSolve->addNonlinearityError(error);
-
-            if (error < linearityNonlinearTolerance)
-            {
-                // FIXME - clean up
-                break;
-            }
-
-            // copy solution
-            for (int i = 0; i < numberOfSolution; i++)
-            {
-                // if (error > 100.0)
-                //     solution.at(i)->multiply(0.5);
-                // else
-                solution.at(i)->copy(solutionPicard.at(i));
-            }
-            // Solution::vector_to_solutions(val_solpic, space, solution);
-            // Solution::vector_to_solutions(solutionPicard., space, solution);
+            isError = true;
+            break;
         }
 
-        for (int i = 0; i < solutionPicard.size(); i++)
-            delete solutionPicard.at(i);
-        solutionPicard.clear();
+        // If residual norm is within tolerance, or the maximum number
+        // of iteration has been reached, then quit.
+        if ((residual_norm < Util::scene()->problemInfo()->linearityNonlinearTolerance || it > Util::scene()->problemInfo()->linearityNonlinearSteps) && it > 1)
+            break;
 
-        return !isError;
-        */
+        // If Jacobian changed, assemble the matrix.
+        if (jacobian_changed)
+            dp.assemble(coeff_vec, matrix, NULL); // NULL = we do not want the rhs.
+
+        // Multiply the residual vector with -1 since the matrix
+        // equation reads J(Y^n) \deltaY^{n+1} = -F(Y^n).
+        rhs->change_sign();
+
+        // Solve the linear system.
+        if(!solver->solve())
+        {
+            m_progressItemSolve->emitMessage(QObject::tr("Matrix solver failed."), true, 1);
+            isError = true;
+            break;
+        }
+
+        // Add \deltaY^{n+1} to Y^n.
+        for (int i = 0; i < ndof; i++)
+            coeff_vec[i] += damping_coeff * solver->get_solution()[i];
+
+        it++;
     }
 
-    if (linearityType == LinearityType_Newton)
+    if (it >= Util::scene()->problemInfo()->linearityNonlinearSteps)
     {
-        /*
-        // project the initial condition on the FE space to obtain initial
-        // coefficient vector for the Newton's method.
-        info("Projecting to obtain initial vector for the Newton's method.");
-        double *coeff_vec = new double[Space::get_num_dofs(space)];
-        OGProjection::project_global(space, solution.at(0), coeff_vec,
-                                     Util::scene()->problemInfo()->matrixSolver);
+        m_progressItemSolve->emitMessage(QObject::tr("Maximum allowed number of Newton iterations exceeded."), true, 1);
+        isError = true;
+    }
 
-        DiscreteProblem dpNonlinNewton(wf, space, false);
-
-        // The Newton's loop.
-        double damping_coeff = 1.0;
-
-        // perform the Picard's iteration
-        for (int i = 0; i < linearityNonlinearSteps; i++)
-        {
-            // assemble the Jacobian matrix and residual vector.
-            dpNonlinNewton.assemble(coeff_vec, matrix, rhs, false);
-
-            // Multiply the residual vector with -1 since the matrix
-            // equation reads J(Y^n) \deltaY^{n+1} = -F(Y^n).
-            rhs->change_sign();
-
-            // Calculate the l2-norm of residual vector
-            double error = get_l2_norm(rhs);
-
-            // emit signal
-            m_progressItemSolve->emitMessage(QObject::tr("Newton’s method rel. error (%2/%3): %1")
-                                             .arg(error, 0, 'f', 5)
-                                             .arg(i)
-                                             .arg(linearityNonlinearSteps), false, 1);
-
-            // add error to the list
-            m_progressItemSolve->addNonlinearityError(error);
-
-            // if residual norm is within tolerance, or the maximum number of iteration has been reached, then quit.
-            if (error < linearityNonlinearTolerance)
-                break;
-
-            // Solve the linear system.
-            isError = solver->solve();
-            if (!isError)
-                error("Matrix solver failed.\n");
-
-            // add \deltaY^{n+1} to Y^n.
-            for (int j = 0; j < Space::get_num_dofs(space); j++)
-                coeff_vec[j] += damping_coeff * solver->get_solution()[j];
-        }
-
+    // Translate the resulting coefficient vector into the Solution sln.
+    if (!isError)
         Solution::vector_to_solutions(coeff_vec, space, solution);
 
-        delete [] coeff_vec;
-        */
-    }
+    // Clean up.
+    delete [] coeff_vec;
+
+    return !isError;
 }
 
 SolutionArray *SolutionAgros::solutionArray(Solution *sln, Space *space, double adaptiveError, double adaptiveSteps, double time)

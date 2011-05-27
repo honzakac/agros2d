@@ -40,8 +40,7 @@ public:
                     if (fabs(boundary->value.number) > EPS_ZERO)
                         add_vector_form_surf(new WeakFormsH1::DefaultVectorFormSurf(0,
                                                                                     QString::number(i + 1).toStdString(),
-                                                                                    boundary->value.number,
-                                                                                    NULL,
+                                                                                    new HermesFunction(- boundary->value.number),
                                                                                     convertProblemType(Util::scene()->problemInfo()->problemType)));
             }
         }
@@ -53,16 +52,21 @@ public:
 
             if (material && Util::scene()->labels[i]->material != Util::scene()->materials[0])
             {
-                add_matrix_form(new DefaultLinearDiffusion(0, 0,
-                                                           QString::number(i).toStdString(),
-                                                           material->permittivity.number * EPS0,
-                                                           HERMES_SYM,
-                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
+                add_matrix_form(new WeakFormsH1::DefaultJacobianDiffusion(0, 0,
+                                                                          QString::number(i).toStdString(),
+                                                                          new HermesFunction(material->permittivity.number * EPS0),
+                                                                          HERMES_NONSYM,
+                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
+
+                add_vector_form(new WeakFormsH1::DefaultResidualDiffusion(0,
+                                                                          QString::number(i).toStdString(),
+                                                                          new HermesFunction(material->permittivity.number * EPS0),
+                                                                          convertProblemType(Util::scene()->problemInfo()->problemType)));
+
                 if (fabs(material->charge_density.number) > EPS_ZERO)
                     add_vector_form(new WeakFormsH1::DefaultVectorFormVol(0,
                                                                           QString::number(i).toStdString(),
-                                                                          material->charge_density.number,
-                                                                          NULL,
+                                                                          new HermesFunction(- material->charge_density.number),
                                                                           convertProblemType(Util::scene()->problemInfo()->problemType)));
             }
         }
