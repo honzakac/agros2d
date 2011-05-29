@@ -558,19 +558,19 @@ bool SolutionAgros::solve(Hermes::vector<Space *> space,
         // Info for the user.
         if (it == 1)
             m_progressItemSolve->emitMessage(QObject::tr("Newton initial residual norm: %1").
-                                             arg(residual_norm, 0, 'f', 5), false, 1);
+                                             arg(residual_norm, 0, 'e', 3), false, 1);
         else
             m_progressItemSolve->emitMessage(QObject::tr("Newton iter %1, residual norm: %2").
                                              arg(it-1).
-                                             arg(residual_norm, 0, 'f', 5), false, 1);
+                                             arg(residual_norm, 0, 'e', 3), false, 1);
 
         // If maximum allowed residual norm is exceeded, fail.
         if (residual_norm > max_allowed_residual_norm)
         {
             m_progressItemSolve->emitMessage(QObject::tr("Current residual norm: %1").
-                                             arg(residual_norm, 0, 'f', 5), false, 1);
+                                             arg(residual_norm, 0, 'e', 3), false, 1);
             m_progressItemSolve->emitMessage(QObject::tr("Maximum allowed residual norm: %1").
-                                             arg(max_allowed_residual_norm, 0, 'f', 5), false, 1);
+                                             arg(max_allowed_residual_norm, 0, 'e', 3), false, 1);
             m_progressItemSolve->emitMessage(QObject::tr("Newton solve not successful."), true, 1);
 
             isError = true;

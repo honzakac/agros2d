@@ -1,8 +1,8 @@
-// #define HAVE_FMEMOPEN
-// #define HAVE_LOG2
+#define HAVE_FMEMOPEN
+#define HAVE_LOG2
 /* #undef EXTREME_QUAD */
 
-// #define WITH_UMFPACK
+#define WITH_UMFPACK
 /* #undef WITH_MUMPS */
 /* #undef WITH_SUPERLU */
 /* #undef WITH_PETSC */
