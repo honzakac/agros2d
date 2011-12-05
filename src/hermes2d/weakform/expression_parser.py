@@ -60,7 +60,7 @@ class NumericStringParser(object):
         self.bnf = expr
     
     def parse(self,num_string):
-        self.exprStack=[]        
+        self.exprStack=[]
         return self.bnf.parseString(num_string,True)
 
 
